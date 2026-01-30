@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components'
 import { useGlobalContext } from '../context/global';
@@ -13,9 +13,13 @@ function Gallery() {
         setIndex(i)
     }
     
-    React.useEffect(() => {
+    const fetchAnimePictures = useCallback(() => {
         getAnimePictures(id)
-    }, [id])
+    }, [id, getAnimePictures])
+    
+    React.useEffect(() => {
+        fetchAnimePictures()
+    }, [fetchAnimePictures])
     
     return (
         <GalleryStyled>
