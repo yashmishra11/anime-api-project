@@ -19,7 +19,7 @@ A modern, responsive anime discovery platform built with React and the Jikan API
 
 ## 🚀 Demo
 
-[Live Demo](#) <!-- Add your deployment link here -->
+[Live Demo](#https://anime-api-project-hhvj.vercel.app/)
 
 ## 📸 Screenshots
 
