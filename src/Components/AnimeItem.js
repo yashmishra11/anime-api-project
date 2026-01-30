@@ -69,11 +69,11 @@ function AnimeItem() {
             <div className='trailer-con'>
                 {trailer?.embed_url &&
                     <iframe
-                        src={trailer?.embed_url}
+                        src={`${trailer?.embed_url}?autoplay=0`}
                         title="Inline Frame Example"
                         width="800"
                         height="450"
-                        allow='accelerometer;autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                        allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
                         allowFullScreen>
                     </iframe>
                 }
@@ -361,5 +361,6 @@ const AnimeItemStyled = styled.div`
         }
     }
 `;
+
 
 export default AnimeItem
