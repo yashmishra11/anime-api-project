@@ -195,7 +195,10 @@ function AnimeItem() {
     }, []);
 
     useEffect(() => {
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
         setAnime({});
         setLoadingAnime(true);
         setRelations([]);
@@ -210,6 +213,13 @@ function AnimeItem() {
         const loadAnimeSpecs = async () => {
             const data = await getAnime(id);
             if (isCancelled) return;
+
+            // Re-assert top scroll position once content has expanded
+            requestAnimationFrame(() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            });
 
             // If /full did not provide relations, fetch them separately
             const hasRelations = Array.isArray(data?.relations) && data.relations.length > 0;
@@ -582,6 +592,11 @@ function AnimeItem() {
                                 to={`/anime/${relItem.mal_id}`}
                                 key={`${relItem.mal_id}-${idx}`}
                                 className="relation-card"
+                                onClick={() => {
+                                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                                    document.documentElement.scrollTop = 0;
+                                    document.body.scrollTop = 0;
+                                }}
                             >
                                 <div className="card-chassis">
                                     {/* Visual Frame */}

@@ -1,20 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export const useSmoothScroll = () => {
     const location = useLocation();
+    const stateRef = useRef({
+        isRunning: false,
+        targetY: 0,
+        currentY: 0,
+        rafId: null
+    });
 
-    // Reset scroll on route change
+    // Reset scroll smoothly to top on route change
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const state = stateRef.current;
+        state.targetY = 0;
+        state.currentY = 0;
+        state.isRunning = false;
+        if (state.rafId) {
+            cancelAnimationFrame(state.rafId);
+            state.rafId = null;
+        }
+
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
     }, [location.pathname]);
 
     useEffect(() => {
-        let isRunning = false;
-        let targetY = window.scrollY;
-        let currentY = window.scrollY;
+        const state = stateRef.current;
+        state.targetY = window.scrollY;
+        state.currentY = window.scrollY;
         const ease = 0.075; // Buttery smooth easing factor
-        let rafId = null;
 
         const isScrollable = (el) => {
             if (!el || el === document.body || el === document.documentElement) return false;
@@ -22,6 +38,23 @@ export const useSmoothScroll = () => {
             const overflowY = style.overflowY;
             const hasScroll = el.scrollHeight > el.clientHeight;
             return hasScroll && (overflowY === 'auto' || overflowY === 'scroll');
+        };
+
+        const render = () => {
+            const diff = state.targetY - state.currentY;
+            state.currentY += diff * ease;
+
+            if (Math.abs(diff) < 0.4) {
+                state.currentY = state.targetY;
+                window.scrollTo(0, Math.round(state.currentY));
+                state.isRunning = false;
+                cancelAnimationFrame(state.rafId);
+                state.rafId = null;
+                return;
+            }
+
+            window.scrollTo(0, Math.round(state.currentY));
+            state.rafId = requestAnimationFrame(render);
         };
 
         const onWheel = (e) => {
@@ -46,38 +79,22 @@ export const useSmoothScroll = () => {
             const clampedDelta = Math.sign(delta) * Math.min(Math.abs(delta), 120);
 
             const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-            targetY = Math.max(0, Math.min(targetY + clampedDelta * 1.6, maxScroll));
+            state.targetY = Math.max(0, Math.min(state.targetY + clampedDelta * 1.6, maxScroll));
 
-            if (!isRunning) {
-                isRunning = true;
-                currentY = window.scrollY;
-                rafId = requestAnimationFrame(render);
+            if (!state.isRunning) {
+                state.isRunning = true;
+                state.currentY = window.scrollY;
+                state.rafId = requestAnimationFrame(render);
             }
 
             e.preventDefault();
         };
 
-        const render = () => {
-            const diff = targetY - currentY;
-            currentY += diff * ease;
-
-            if (Math.abs(diff) < 0.4) {
-                currentY = targetY;
-                window.scrollTo(0, Math.round(currentY));
-                isRunning = false;
-                cancelAnimationFrame(rafId);
-                return;
-            }
-
-            window.scrollTo(0, Math.round(currentY));
-            rafId = requestAnimationFrame(render);
-        };
-
         const onScroll = () => {
             // Keep in sync when user drags scrollbar or presses PageUp/PageDown
-            if (!isRunning) {
-                targetY = window.scrollY;
-                currentY = window.scrollY;
+            if (!state.isRunning) {
+                state.targetY = window.scrollY;
+                state.currentY = window.scrollY;
             }
         };
 
@@ -87,7 +104,7 @@ export const useSmoothScroll = () => {
         return () => {
             window.removeEventListener('wheel', onWheel);
             window.removeEventListener('scroll', onScroll);
-            if (rafId) cancelAnimationFrame(rafId);
+            if (state.rafId) cancelAnimationFrame(state.rafId);
         };
     }, []);
 };
