@@ -2,48 +2,49 @@ import { css } from 'styled-components';
 
 export const tokens = {
     colors: {
-        chassis: '#e0e5ec',         // Level 0 base background
-        panel: '#f0f2f5',           // Level +1 raised surface
-        panelDark: '#2d3436',       // Dark technical panel surface
-        recessed: '#d1d9e6',        // Level -1 recessed wells, inputs, grooves
-        textPrimary: '#2d3436',     // Dark charcoal ink
-        textMuted: '#4a5568',       // WCAG AA compliant slate grey
+        chassis: '#f4f6f9',         // Level 0 base background: crisp, modern, ultra-clean white
+        panel: '#ffffff',           // Level +1 raised pure white surface
+        panelDark: '#1e232a',       // Dark technical panel surface
+        recessed: '#e9edf2',        // Level -1 recessed wells, inputs, grooves
+        textPrimary: '#1e2530',     // Deep crisp charcoal ink
+        textMuted: '#64748b',       // Clean modern slate grey, WCAG AA compliant
         textLight: '#ffffff',       // White text for dark surfaces or accents
-        accent: '#ff4757',          // Safety Orange / Braun Red
-        accentHover: '#e03848',     // Deepened accent for hover
+        accent: '#ff5e28',          // Safety Orange / Solar Flare — prominent orange integration
+        accentHover: '#ea4e18',     // Deepened warm orange
         accentForeground: '#ffffff',// High contrast text on accent
-        borderShadow: '#babecc',    // Darker shadow color in neumorphic pairs
-        borderLight: '#ffffff',     // Lighter highlight color
-        borderDark: '#a3b1c6',      // Machine divider / prominent border
+        borderShadow: '#d3d8df',    // Clean soft shadow in neumorphic pairs
+        borderLight: '#ffffff',     // Pure bright white highlight
+        borderDark: '#cbd2db',      // Machine divider / prominent border
         ledGreen: '#22c55e',        // Active / online LED status
-        ledOrange: '#ff4757',       // Alert / primary LED status
+        ledOrange: '#ff5e28',       // Alert / primary LED status
         ledAmber: '#f59e0b',        // Standby LED status
     },
     shadows: {
         // Base elevation for cards and panels (45deg top-left lighting)
-        card: '8px 8px 16px #babecc, -8px -8px 16px #ffffff',
+        card: '8px 8px 18px #d3d8df, -8px -8px 18px #ffffff',
         // High elevation for interactive elements
-        floating: '12px 12px 24px #babecc, -12px -12px 24px #ffffff, inset 1px 1px 0 rgba(255, 255, 255, 0.6)',
+        floating: '12px 12px 24px #d3d8df, -12px -12px 24px #ffffff, inset 1px 1px 0 rgba(255, 255, 255, 0.9)',
         // Button hover elevation
-        buttonHover: '10px 10px 20px #babecc, -10px -10px 20px #ffffff',
+        buttonHover: '10px 10px 20px #d3d8df, -10px -10px 20px #ffffff',
         // Pressed / depressed active state
-        pressed: 'inset 6px 6px 12px #babecc, inset -6px -6px 12px #ffffff',
+        pressed: 'inset 6px 6px 12px #d3d8df, inset -6px -6px 12px #ffffff',
         // Recessed wells (inputs, screens, slots)
-        recessed: 'inset 4px 4px 8px #babecc, inset -4px -4px 8px #ffffff',
+        recessed: 'inset 4px 4px 8px #d3d8df, inset -4px -4px 8px #ffffff',
         // Deep recessed
-        recessedDeep: 'inset 6px 6px 14px #babecc, inset -6px -6px 14px #ffffff',
+        recessedDeep: 'inset 6px 6px 14px #d3d8df, inset -6px -6px 14px #ffffff',
         // Sharp mechanical edge
-        sharp: '4px 4px 8px rgba(0, 0, 0, 0.15), -1px -1px 1px rgba(255, 255, 255, 0.8)',
+        sharp: '4px 4px 8px rgba(30, 37, 48, 0.1), -1px -1px 1px rgba(255, 255, 255, 0.9)',
         // Safety Orange button shadows
-        accentButton: '4px 4px 10px rgba(255, 71, 87, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.9)',
-        accentButtonPressed: 'inset 4px 4px 8px rgba(166, 30, 45, 0.6), inset -4px -4px 8px rgba(255, 120, 130, 0.6)',
+        accentButton: '4px 4px 12px rgba(255, 94, 40, 0.4), -4px -4px 12px rgba(255, 255, 255, 0.9)',
+        accentButtonPressed: 'inset 4px 4px 8px rgba(180, 50, 15, 0.5), inset -4px -4px 8px rgba(255, 140, 100, 0.5)',
         // LED bloom glows
         glowGreen: '0 0 10px 2px rgba(34, 197, 94, 0.75)',
-        glowOrange: '0 0 10px 2px rgba(255, 71, 87, 0.75)',
+        glowOrange: '0 0 10px 2px rgba(255, 94, 40, 0.75)',
+        glowWarm: '0 0 12px 2px rgba(255, 94, 40, 0.45)',
         glowAmber: '0 0 10px 2px rgba(245, 158, 11, 0.75)',
         // Embossed / debossed text shadows
         textEmbossed: '0 1px 0 #ffffff',
-        textDebossed: '0 -1px 0 rgba(0, 0, 0, 0.4)',
+        textDebossed: '0 -1px 0 rgba(0, 0, 0, 0.3)',
     },
     radii: {
         xs: '3px',
@@ -67,10 +68,10 @@ export const tokens = {
 // Reusable Industrial UI helpers
 export const cornerScrews = css`
     background-image: 
-        radial-gradient(circle at 12px 12px, #a3b1c6 1.5px, #ffffff 2.5px, transparent 3px),
-        radial-gradient(circle at calc(100% - 12px) 12px, #a3b1c6 1.5px, #ffffff 2.5px, transparent 3px),
-        radial-gradient(circle at 12px calc(100% - 12px), #a3b1c6 1.5px, #ffffff 2.5px, transparent 3px),
-        radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), #a3b1c6 1.5px, #ffffff 2.5px, transparent 3px);
+        radial-gradient(circle at 12px 12px, #cbd2db 1.5px, #ffffff 2.5px, transparent 3px),
+        radial-gradient(circle at calc(100% - 12px) 12px, #cbd2db 1.5px, #ffffff 2.5px, transparent 3px),
+        radial-gradient(circle at 12px calc(100% - 12px), #cbd2db 1.5px, #ffffff 2.5px, transparent 3px),
+        radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), #cbd2db 1.5px, #ffffff 2.5px, transparent 3px);
 `;
 
 export const ventSlots = css`

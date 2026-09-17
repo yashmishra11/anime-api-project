@@ -37,9 +37,10 @@ const GlobalStyle = createGlobalStyle`
             z-index: -1;
             background-color: ${tokens.colors.chassis};
             background-image: 
-                radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.6) 0%, transparent 45%),
-                radial-gradient(circle at 90% 90%, rgba(186, 190, 204, 0.25) 0%, transparent 40%),
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+                radial-gradient(circle at 10% 12%, rgba(255, 94, 40, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 90% 88%, rgba(255, 94, 40, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, transparent 70%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.025'/%3E%3C/svg%3E");
             transform: translateZ(0);
             will-change: transform;
         }
@@ -71,7 +72,7 @@ const GlobalStyle = createGlobalStyle`
             
             &:hover {
                 box-shadow: 4px 4px 8px ${tokens.colors.borderShadow}, -4px -4px 8px ${tokens.colors.borderLight};
-                background: #d8dee8;
+                background: #d3d8df;
             }
             
             &:active {

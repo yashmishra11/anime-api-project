@@ -71,7 +71,7 @@ const CardStyled = styled(Link)`
     border-radius: ${tokens.radii.lg};
     background-color: ${tokens.colors.chassis};
     box-shadow: ${tokens.shadows.card};
-    border: 1px solid rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 247, 240, 0.85);
     padding: 10px;
     ${cornerScrews}
     transition: ${tokens.transitions.normal};
@@ -81,7 +81,7 @@ const CardStyled = styled(Link)`
     &:hover {
         transform: translateY(-6px);
         box-shadow: ${tokens.shadows.floating};
-        border-color: rgba(255, 255, 255, 1);
+        border-color: rgba(255, 247, 240, 1);
 
         .media-viewport img {
             transform: scale(1.04);
@@ -249,7 +249,7 @@ const CardStyled = styled(Link)`
                 background: ${tokens.colors.recessed};
                 padding: 2px 8px;
                 border-radius: ${tokens.radii.xs};
-                box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1), inset -1px -1px 2px rgba(255, 255, 255, 0.7);
+                box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1), inset -1px -1px 2px rgba(255, 247, 240, 0.7);
                 letter-spacing: 0.05em;
                 text-transform: uppercase;
             }

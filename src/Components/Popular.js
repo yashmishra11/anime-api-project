@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import AnimeCard from './AnimeCard';
 import { tokens } from '../theme/tokens';
 
-function Popular({ rendered, selectedGenre = 'Overall', onResetGenre }) {
+function Popular({ selectedGenre = 'Overall', onResetGenre }) {
     const { popularAnime, isSearch, searchResults } = useGlobalContext();
 
     const baseList = isSearch ? searchResults : (popularAnime || []);
@@ -79,7 +79,7 @@ const PopularStyled = styled.div`
         background: ${tokens.colors.chassis};
         border-radius: ${tokens.radii.xl} ${tokens.radii.xl} 0 0;
         box-shadow: ${tokens.shadows.recessed};
-        border: 1px solid rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 247, 240, 0.7);
         align-content: start;
         
         @media screen and (max-width: 1440px) {
@@ -109,7 +109,7 @@ const PopularStyled = styled.div`
             padding: 0.75rem 1.25rem;
             border-radius: ${tokens.radii.md};
             box-shadow: ${tokens.shadows.card};
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 247, 240, 0.85);
             margin-bottom: 0.5rem;
             flex-wrap: wrap;
             gap: 0.75rem;
@@ -148,7 +148,7 @@ const PopularStyled = styled.div`
                 padding: 4px 10px;
                 border-radius: ${tokens.radii.sm};
                 cursor: pointer;
-                box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1), inset -1px -1px 2px rgba(255, 255, 255, 0.8);
+                box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1), inset -1px -1px 2px rgba(255, 247, 240, 0.8);
                 transition: ${tokens.transitions.fast};
 
                 &:hover {

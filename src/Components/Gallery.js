@@ -377,7 +377,7 @@ const GalleryStyled = styled.div`
             border-radius: ${tokens.radii.md};
             background: ${tokens.colors.chassis};
             box-shadow: ${tokens.shadows.card};
-            border: 1px solid rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 247, 240, 0.85);
             font-family: ${tokens.fonts.technical};
             font-size: 0.78rem;
             font-weight: 700;
@@ -438,7 +438,7 @@ const GalleryStyled = styled.div`
         background: ${tokens.colors.chassis};
         border-radius: ${tokens.radii.xl};
         box-shadow: ${tokens.shadows.card};
-        border: 1px solid rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 247, 240, 0.85);
         padding: 1.25rem 2rem 1.5rem 2rem;
         margin-bottom: 1.5rem;
         ${cornerScrews}
@@ -613,7 +613,7 @@ const GalleryStyled = styled.div`
         padding: 1.75rem;
         background: ${tokens.colors.chassis};
         border-radius: ${tokens.radii.xl};
-        border: 1px solid rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 247, 240, 0.85);
         box-shadow: ${tokens.shadows.card};
         position: relative;
         ${cornerScrews}
@@ -783,7 +783,7 @@ const GalleryStyled = styled.div`
         background: ${tokens.colors.chassis};
         border-radius: ${tokens.radii.xl};
         box-shadow: ${tokens.shadows.card};
-        border: 1px solid rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 247, 240, 0.85);
         padding: 1.75rem 2rem 2.25rem 2rem;
         ${cornerScrews}
 
@@ -877,7 +877,7 @@ const GalleryStyled = styled.div`
 
                     .thumbnail-frame {
                         box-shadow: ${tokens.shadows.floating};
-                        border-color: rgba(255, 255, 255, 1);
+                        border-color: rgba(255, 247, 240, 1);
 
                         img {
                             filter: grayscale(0%) contrast(1.05);

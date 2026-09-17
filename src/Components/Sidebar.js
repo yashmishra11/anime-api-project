@@ -25,7 +25,7 @@ function Sidebar() {
                     return (
                         <Link to={`/anime/${anime.mal_id}`} key={anime.mal_id}>
                             <div className="img-slot">
-                                <img src={anime.images.jpg.large_image_url} alt={anime.title || "Anime"} />
+                                <img src={anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url} alt={anime.title || "Anime"} />
                                 <span className="rank-badge">0{index + 1}</span>
                             </div>
                             <div className="anime-meta">
@@ -50,7 +50,7 @@ const SidebarStyled = styled.aside`
     min-width: 300px;
     max-width: 340px;
     box-shadow: ${tokens.shadows.card};
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 247, 240, 0.85);
     border-right: none;
     transition: ${tokens.transitions.normal};
     
@@ -64,7 +64,7 @@ const SidebarStyled = styled.aside`
         max-width: 100%;
         min-width: 100%;
         border-radius: ${tokens.radii.lg};
-        border-right: 1px solid rgba(255, 255, 255, 0.8);
+        border-right: 1px solid rgba(255, 247, 240, 0.85);
         padding: 2rem;
         
         .anime {
@@ -152,7 +152,7 @@ const SidebarStyled = styled.aside`
             border-radius: ${tokens.radii.md};
             background: ${tokens.colors.chassis};
             box-shadow: ${tokens.shadows.card};
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 247, 240, 0.85);
             transition: ${tokens.transitions.fast};
             
             .img-slot {
@@ -222,7 +222,7 @@ const SidebarStyled = styled.aside`
             &:hover {
                 transform: translateX(-4px);
                 box-shadow: ${tokens.shadows.floating};
-                border-color: rgba(255, 255, 255, 1);
+                border-color: rgba(255, 247, 240, 1);
                 
                 .img-slot img {
                     transform: scale(1.05);

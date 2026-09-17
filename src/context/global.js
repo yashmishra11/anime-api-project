@@ -312,41 +312,41 @@ export const GlobalContextProvider = ({ children }) => {
     };
 
     // Fetch popular anime
-    const getPopularAnime = async () => {
+    const getPopularAnime = React.useCallback(async () => {
         dispatch({ type: LOADING });
         const data = await safeFetch(`${baseUrl}/top/anime?filter=bypopularity`);
         dispatch({
             type: GET_POPULAR_ANIME,
             payload: data || FALLBACK_POPULAR_ANIME
         });
-    };
+    }, []);
 
     // Fetch upcoming anime
-    const getUpcomingAnime = async () => {
+    const getUpcomingAnime = React.useCallback(async () => {
         dispatch({ type: LOADING });
         const data = await safeFetch(`${baseUrl}/top/anime?filter=upcoming`);
         dispatch({
             type: GET_UPCOMING_ANIME,
             payload: data || []
         });
-    };
+    }, []);
 
     // Fetch airing anime
-    const getAiringAnime = async () => {
+    const getAiringAnime = React.useCallback(async () => {
         dispatch({ type: LOADING });
         const data = await safeFetch(`${baseUrl}/top/anime?filter=airing`);
         dispatch({
             type: GET_AIRING_ANIME,
             payload: data || []
         });
-    };
+    }, []);
 
     // Search anime
-    const searchAnime = async (anime) => {
+    const searchAnime = React.useCallback(async (anime) => {
         dispatch({ type: LOADING });
         const data = await safeFetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(anime)}&order_by=popularity&sort=asc&sfw`);
         dispatch({ type: SEARCH, payload: data || [] });
-    };
+    }, []);
 
     // Get character pictures
     const getAnimePictures = React.useCallback(async (id) => {
@@ -363,7 +363,7 @@ export const GlobalContextProvider = ({ children }) => {
             getAiringAnime();
         }, 600);
         return () => clearTimeout(timer);
-    }, []);
+    }, [getPopularAnime, getAiringAnime]);
 
     return (
         <GlobalContext.Provider value={{

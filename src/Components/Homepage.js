@@ -36,13 +36,13 @@ function Homepage() {
     const switchComponent = () => {
         switch(rendered){
             case 'popular':
-                return <Popular rendered={rendered} selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
+                return <Popular selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
             case 'airing':
-                return <Airing rendered={rendered} selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
+                return <Airing selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
             case 'upcoming':
-                return <Upcoming rendered={rendered} selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
+                return <Upcoming selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
             default:
-                return <Popular rendered={rendered} selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
+                return <Popular selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
         }
     };
 
@@ -171,7 +171,7 @@ const HomepageStyled = styled.div`
         background-color: ${tokens.colors.chassis};
         border-radius: ${tokens.radii.lg};
         box-shadow: ${tokens.shadows.card};
-        border: 1px solid rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 247, 240, 0.8);
         ${cornerScrews}
         transition: ${tokens.transitions.normal};
         
@@ -260,7 +260,7 @@ const HomepageStyled = styled.div`
                     background: ${tokens.colors.recessed};
                     padding: 3px 9px;
                     border-radius: ${tokens.radii.xs};
-                    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.15), inset -1px -1px 2px rgba(255, 255, 255, 0.8);
+                    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.15), inset -1px -1px 2px rgba(255, 247, 240, 0.8);
                 }
 
                 .console-vents {
@@ -298,7 +298,7 @@ const HomepageStyled = styled.div`
                 color: ${tokens.colors.textMuted};
                 background: ${tokens.colors.chassis};
                 box-shadow: ${tokens.shadows.card};
-                border: 1px solid rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(255, 247, 240, 0.7);
                 cursor: pointer;
                 transition: ${tokens.transitions.fast};
                 min-height: 38px;
@@ -459,7 +459,7 @@ const CategoryDeckStyled = styled.div`
         background: ${tokens.colors.chassis};
         border-radius: ${tokens.radii.lg};
         box-shadow: ${tokens.shadows.card};
-        border: 1px solid rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 247, 240, 0.85);
 
         @media screen and (max-width: 768px) {
             padding: 0.65rem 0.85rem;
@@ -505,7 +505,7 @@ const CategoryDeckStyled = styled.div`
                 letter-spacing: 0.04em;
                 color: ${tokens.colors.textMuted};
                 background: ${tokens.colors.chassis};
-                border: 1px solid rgba(255, 255, 255, 0.8);
+                border: 1px solid rgba(255, 247, 240, 0.8);
                 border-radius: ${tokens.radii.sm};
                 padding: 4px 10px;
                 cursor: pointer;

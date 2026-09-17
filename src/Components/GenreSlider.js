@@ -357,7 +357,7 @@ const SliderConsole = styled.div`
     background-color: ${tokens.colors.chassis};
     border-radius: ${tokens.radii.xl};
     box-shadow: ${tokens.shadows.card};
-    border: 1px solid rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 247, 240, 0.85);
     padding: 1.25rem 2rem 1.5rem 2rem;
     ${cornerScrews}
     position: relative;
@@ -698,7 +698,7 @@ const SliderConsole = styled.div`
             border-radius: ${tokens.radii.lg};
             background: ${tokens.colors.chassis};
             box-shadow: ${tokens.shadows.floating};
-            border: 2px solid rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 247, 240, 0.9);
             overflow: hidden;
             text-decoration: none;
             display: block;
@@ -761,7 +761,7 @@ const SliderConsole = styled.div`
                 letter-spacing: 0.04em;
                 color: ${tokens.colors.textMuted};
                 background: ${tokens.colors.chassis};
-                border: 1px solid rgba(255, 255, 255, 0.8);
+                border: 1px solid rgba(255, 247, 240, 0.8);
                 border-radius: ${tokens.radii.sm};
                 padding: 5px 11px;
                 cursor: pointer;
@@ -809,7 +809,7 @@ const SliderConsole = styled.div`
                 width: 34px;
                 height: 34px;
                 border-radius: ${tokens.radii.sm};
-                border: 1px solid rgba(255, 255, 255, 0.8);
+                border: 1px solid rgba(255, 247, 240, 0.8);
                 background: ${tokens.colors.chassis};
                 color: ${tokens.colors.textPrimary};
                 font-size: 1.25rem;
