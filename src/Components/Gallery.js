@@ -1,227 +1,922 @@
-import React, { useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom';
-import styled from 'styled-components'
-import { useGlobalContext } from '../context/global';
+import React, { useState, useEffect } from 'react';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import styled from 'styled-components';
+import { tokens, cornerScrews, ventSlots } from '../theme/tokens';
 
 function Gallery() {
-    const {getAnimePictures, pictures} = useGlobalContext()
-    const {id} = useParams();
-    //state
-    const [index, setIndex] = React.useState(0);
-    
-    const handleImageClick = (i) => {
-        setIndex(i)
-    }
-    
-    const fetchAnimePictures = useCallback(() => {
-        getAnimePictures(id)
-    }, [id, getAnimePictures])
-    
-    React.useEffect(() => {
-        fetchAnimePictures()
-    }, [fetchAnimePictures])
-    
+    const { id } = useParams();
+    const location = useLocation();
+
+    // Context passed from AnimeItem route
+    const passedChar = location.state?.character;
+    const passedRole = location.state?.role;
+    const passedAnimeId = location.state?.animeId;
+    const passedAnimeTitle = location.state?.animeTitle;
+
+    // Initial portrait from router state if available
+    const initialPortrait = passedChar?.images?.jpg?.image_url || passedChar?.images?.webp?.image_url;
+
+    const [character, setCharacter] = useState(passedChar || null);
+    const [pictures, setPictures] = useState(
+        initialPortrait ? [{ jpg: { image_url: initialPortrait } }] : []
+    );
+    const [index, setIndex] = useState(0);
+    const [loading, setLoading] = useState(!initialPortrait);
+    const [showFullBio, setShowFullBio] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadSpecimenData = async () => {
+            setLoading(true);
+
+            // 1. Fetch or retrieve character details
+            const cacheKeyInfo = `character_dossier_${id}`;
+            let charInfo = null;
+            try {
+                const cached = sessionStorage.getItem(cacheKeyInfo);
+                if (cached) charInfo = JSON.parse(cached);
+            } catch {}
+
+            if (!charInfo) {
+                try {
+                    const res = await fetch(`https://api.jikan.moe/v4/characters/${id}`);
+                    if (res.status === 429) {
+                        await new Promise((r) => setTimeout(r, 1200));
+                        const retry = await fetch(`https://api.jikan.moe/v4/characters/${id}`);
+                        const d = await retry.json();
+                        if (d?.data) charInfo = d.data;
+                    } else if (res.ok) {
+                        const d = await res.json();
+                        if (d?.data) charInfo = d.data;
+                    }
+
+                    if (charInfo) {
+                        try {
+                            sessionStorage.setItem(cacheKeyInfo, JSON.stringify(charInfo));
+                        } catch {}
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch character dossier:', e);
+                }
+            }
+
+            if (isMounted && charInfo) {
+                setCharacter(charInfo);
+                document.title = `${charInfo.name || 'Specimen'} // Character Dossier - AniLog`;
+            } else if (isMounted && passedChar?.name) {
+                document.title = `${passedChar.name} // Character Dossier - AniLog`;
+            }
+
+            // 2. Fetch or retrieve character gallery pictures
+            const cacheKeyPics = `character_gallery_${id}`;
+            let fetchedPics = null;
+            try {
+                const cached = sessionStorage.getItem(cacheKeyPics);
+                if (cached) fetchedPics = JSON.parse(cached);
+            } catch {}
+
+            if (!fetchedPics) {
+                try {
+                    await new Promise((r) => setTimeout(r, 350));
+                    const res = await fetch(`https://api.jikan.moe/v4/characters/${id}/pictures`);
+                    if (res.status === 429) {
+                        await new Promise((r) => setTimeout(r, 1200));
+                        const retry = await fetch(`https://api.jikan.moe/v4/characters/${id}/pictures`);
+                        const d = await retry.json();
+                        if (d?.data) fetchedPics = d.data;
+                    } else if (res.ok) {
+                        const d = await res.json();
+                        if (d?.data) fetchedPics = d.data;
+                    }
+
+                    if (fetchedPics) {
+                        try {
+                            sessionStorage.setItem(cacheKeyPics, JSON.stringify(fetchedPics));
+                        } catch {}
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch character pictures:', e);
+                }
+            }
+
+            if (isMounted) {
+                // Build deduplicated image array, guaranteeing at least the portrait
+                const combined = [];
+                const mainImg =
+                    charInfo?.images?.jpg?.image_url ||
+                    charInfo?.images?.webp?.image_url ||
+                    passedChar?.images?.jpg?.image_url ||
+                    passedChar?.images?.webp?.image_url;
+
+                if (mainImg) {
+                    combined.push({ jpg: { image_url: mainImg } });
+                }
+
+                if (Array.isArray(fetchedPics)) {
+                    fetchedPics.forEach((pic) => {
+                        const url = pic?.jpg?.image_url || pic?.image_url;
+                        if (url && !combined.some((c) => c.jpg?.image_url === url)) {
+                            combined.push({ jpg: { image_url: url } });
+                        }
+                    });
+                }
+
+                if (combined.length > 0) {
+                    setPictures(combined);
+                }
+                setLoading(false);
+            }
+        };
+
+        loadSpecimenData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [id, passedChar]);
+
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (pictures.length <= 1) return;
+            if (e.key === 'ArrowLeft') {
+                setIndex((prev) => (prev - 1 + pictures.length) % pictures.length);
+            } else if (e.key === 'ArrowRight') {
+                setIndex((prev) => (prev + 1) % pictures.length);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [pictures.length]);
+
+    const handlePrev = () => {
+        if (pictures.length <= 1) return;
+        setIndex((prev) => (prev - 1 + pictures.length) % pictures.length);
+    };
+
+    const handleNext = () => {
+        if (pictures.length <= 1) return;
+        setIndex((prev) => (prev + 1) % pictures.length);
+    };
+
+    const currentImg = pictures[index]?.jpg?.image_url || initialPortrait;
+    const charName = character?.name || passedChar?.name || `Specimen #${id}`;
+    const charKanji = character?.name_kanji;
+    const charRole = passedRole || (character?.role ? character.role : null);
+    const favorites = character?.favorites;
+    const aboutText = character?.about;
+
     return (
         <GalleryStyled>
-            <div className="back">
-                <Link to="/">
-                    <i className="fas fa-arrow-left"></i>
-                    Back to Home
-                </Link>
+            {/* Top Navigation & Status Bar */}
+            <div className="gallery-nav-bar">
+                <div className="back-link-slot">
+                    {passedAnimeId ? (
+                        <Link to={`/anime/${passedAnimeId}`} className="nav-btn">
+                            <span className="arrow">←</span>
+                            <span>RETURN TO {passedAnimeTitle ? passedAnimeTitle.toUpperCase() : 'SPEC SHEET'}</span>
+                        </Link>
+                    ) : (
+                        <Link to="/" className="nav-btn">
+                            <span className="arrow">←</span>
+                            <span>DIRECTORY TERMINAL</span>
+                        </Link>
+                    )}
+                </div>
+
+                <div className="nav-telemetry">
+                    <span className="led-status" />
+                    <span className="telemetry-label">
+                        SPECIMEN ARCHIVE // ID: {id} // {pictures.length} FRAMES
+                    </span>
+                </div>
             </div>
-            <div className="big-image">
-                <img src={pictures[index]?.jpg.image_url} alt="" />
-            </div>
-            <div className="small-images">
-                {pictures?.map((picture, i) => {
-                    return <div className="image-con" onClick={() => {
-                        handleImageClick(i)
-                    }} key={i}>
-                        <img 
-                            src={picture?.jpg.image_url}
-                            style={{
-                                border: i === index ? "3px solid rgba(255, 255, 255, 0.8)" : "3px solid rgba(255, 255, 255, 0.2)",
-                                filter: i === index ? 'grayscale(0) brightness(1.1)' : 'grayscale(40%) brightness(0.8)',
-                                transform: i === index ? 'scale(1.15)' : 'scale(1)',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: i === index ? '0 8px 20px rgba(0, 0, 0, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.2)'
-                            }}
-                            alt="" 
-                        />
+
+            {/* Character Dossier Hero Header */}
+            <div className="character-dossier-card">
+                <div className="dossier-header-bar">
+                    <div className="dossier-status">
+                        <span className="pulse-led" />
+                        <span className="dossier-label">// CLASSIFIED SPECIMEN DOSSIER</span>
                     </div>
-                })}
+                    <div className="dossier-vents">
+                        <span />
+                    </div>
+                </div>
+
+                <div className="dossier-content">
+                    <div className="dossier-identity">
+                        <h1 className="specimen-name">{charName}</h1>
+                        {charKanji && <span className="specimen-kanji">{charKanji}</span>}
+                    </div>
+
+                    <div className="dossier-badges">
+                        {charRole && (
+                            <div className="spec-pill role-pill">
+                                <span className="label">ROLE:</span>
+                                <span className="val">{charRole.toUpperCase()}</span>
+                            </div>
+                        )}
+                        {favorites !== undefined && (
+                            <div className="spec-pill fav-pill">
+                                <span className="star">★</span>
+                                <span className="val">{favorites.toLocaleString()}</span>
+                                <span className="unit">FAVORITES</span>
+                            </div>
+                        )}
+                        {passedAnimeTitle && (
+                            <div className="spec-pill source-pill">
+                                <span className="label">SOURCE:</span>
+                                <span className="val">{passedAnimeTitle}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {aboutText && (
+                        <div className="dossier-about-box">
+                            <p className={`dossier-text ${showFullBio ? 'expanded' : ''}`}>
+                                {aboutText}
+                            </p>
+                            {aboutText.length > 280 && (
+                                <button
+                                    type="button"
+                                    className="expand-bio-btn"
+                                    onClick={() => setShowFullBio(!showFullBio)}
+                                >
+                                    {showFullBio ? '▲ COLLAPSE DOSSIER' : '▼ READ FULL SPECIMEN DOSSIER'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Big Main Image Viewport Console */}
+            <div className="big-image">
+                <div className="viewport-header">
+                    <div className="telemetry-info">
+                        <span className={`led-indicator ${loading ? 'loading' : ''}`} />
+                        <span className="specimen-label">
+                            {loading && pictures.length === 0
+                                ? 'SCANNING SPECIMEN CARTRIDGES...'
+                                : `SPECIMEN VIEW // FRAME [0${pictures.length > 0 ? index + 1 : 0} / 0${pictures.length}]`}
+                        </span>
+                    </div>
+                    <div className="viewport-vents">
+                        <span />
+                    </div>
+                </div>
+
+                <div className="viewport-well">
+                    {currentImg ? (
+                        <div className="image-wrapper">
+                            <img
+                                src={currentImg}
+                                alt={`${charName} frame ${index + 1}`}
+                                key={currentImg}
+                            />
+                            {pictures.length > 1 && (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="viewport-arrow prev"
+                                        onClick={handlePrev}
+                                        aria-label="Previous Specimen Frame"
+                                    >
+                                        ‹
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="viewport-arrow next"
+                                        onClick={handleNext}
+                                        aria-label="Next Specimen Frame"
+                                    >
+                                        ›
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="empty-viewport">
+                            <span className="empty-led" />
+                            <p className="empty-title">// NO SPECIMEN FRAMES ARCHIVED</p>
+                            <p className="empty-sub">Telemetry archives for this specimen could not be retrieved from satellite network.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Thumbnail Cartridge Selector Bank */}
+            {pictures.length > 1 && (
+                <div className="small-images-panel">
+                    <div className="panel-label-bar">
+                        <span className="tray-title">
+                            // CARTRIDGE SELECTOR BANK [{pictures.length} FRAMES LOADED]
+                        </span>
+                        <span className="status-readout">STATUS: ONLINE</span>
+                    </div>
+
+                    <div className="small-images">
+                        {pictures.map((picture, i) => {
+                            const isSelected = i === index;
+                            const thumbUrl = picture?.jpg?.image_url;
+                            return (
+                                <div
+                                    className={`image-con ${isSelected ? 'active-cartridge' : ''}`}
+                                    onClick={() => setIndex(i)}
+                                    key={thumbUrl || i}
+                                    title={`Select Frame 0${i + 1}`}
+                                >
+                                    <div className="thumbnail-frame">
+                                        <img
+                                            src={thumbUrl}
+                                            alt={`${charName} thumbnail ${i + 1}`}
+                                            loading="lazy"
+                                        />
+                                        <span className="index-pip">{i < 9 ? `0${i + 1}` : i + 1}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </GalleryStyled>
-    )
+    );
 }
 
 const GalleryStyled = styled.div`
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: ${tokens.colors.chassis};
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2rem;
+    padding: 1.5rem 2rem 4rem 2rem;
     position: relative;
-    
+
     @media screen and (max-width: 768px) {
-        padding: 1.5rem 1rem;
+        padding: 1rem 1rem 3rem 1rem;
     }
-    
-    .back {
-        position: absolute;
-        top: 2rem;
-        left: 2rem;
-        z-index: 10;
-        
-        @media screen and (max-width: 768px) {
-            top: 1rem;
-            left: 1rem;
-        }
-        
-        a {
-            font-weight: 600;
-            text-decoration: none;
-            color: #ffffff;
-            display: flex;
+
+    .gallery-nav-bar {
+        width: min(92%, 1100px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+
+        .nav-btn {
+            display: inline-flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            font-size: 1rem;
-            
-            i {
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 0.6rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: ${tokens.radii.md};
+            background: ${tokens.colors.chassis};
+            box-shadow: ${tokens.shadows.card};
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            font-family: ${tokens.fonts.technical};
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: ${tokens.colors.textMuted};
+            text-decoration: none;
+            transition: ${tokens.transitions.fast};
+
+            .arrow {
+                font-size: 1.1rem;
+                transition: transform 0.2s ease;
             }
-            
+
             &:hover {
-                background: rgba(255, 255, 255, 0.25);
-                border-color: rgba(255, 255, 255, 0.4);
-                transform: translateX(-4px);
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-                
-                i {
+                color: ${tokens.colors.accent};
+                box-shadow: ${tokens.shadows.buttonHover};
+                transform: translateX(-3px);
+
+                .arrow {
                     transform: translateX(-4px);
                 }
             }
-            
+
             &:active {
-                transform: translateX(-2px);
-            }
-            
-            @media screen and (max-width: 768px) {
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-                gap: 0.5rem;
+                transform: translateX(0);
+                box-shadow: ${tokens.shadows.pressed};
             }
         }
-    }
-    
-    .big-image {
-        display: inline-block;
-        padding: 2rem;
-        margin: 6rem 0 2rem 0;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        border-radius: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
-        position: relative;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        
-        @media screen and (max-width: 768px) {
-            padding: 1.5rem;
-            margin: 5rem 0 2rem 0;
-        }
-        
-        @media screen and (max-width: 480px) {
-            padding: 1rem;
-            margin: 4rem 0 1.5rem 0;
-        }
-        
-        &:hover {
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-            transform: scale(1.02);
-        }
-        
-        img {
-            width: 350px;
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            display: block;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            
-            @media screen and (max-width: 480px) {
-                width: 100%;
-            }
-        }
-    }
-    
-    .small-images {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        width: 90%;
-        max-width: 1200px;
-        padding: 2rem;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(12px);
-        border: 2px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        justify-content: center;
-        
-        @media screen and (max-width: 768px) {
-            width: 95%;
-            padding: 1.5rem;
-            gap: 0.75rem;
-        }
-        
-        @media screen and (max-width: 480px) {
-            padding: 1rem;
+
+        .nav-telemetry {
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
+
+            .led-status {
+                width: 7px;
+                height: 7px;
+                border-radius: ${tokens.radii.full};
+                background: ${tokens.colors.ledGreen};
+                box-shadow: ${tokens.shadows.glowGreen};
+                animation: pulse 2s infinite ease-in-out;
+            }
+
+            .telemetry-label {
+                font-family: ${tokens.fonts.technical};
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                color: ${tokens.colors.textMuted};
+                text-shadow: ${tokens.shadows.textEmbossed};
+            }
         }
-        
-        .image-con {
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            &:hover {
-                transform: translateY(-4px);
+    }
+
+    /* Character Dossier Hero Card */
+    .character-dossier-card {
+        width: min(92%, 1100px);
+        background: ${tokens.colors.chassis};
+        border-radius: ${tokens.radii.xl};
+        box-shadow: ${tokens.shadows.card};
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        padding: 1.25rem 2rem 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        ${cornerScrews}
+        position: relative;
+
+        @media screen and (max-width: 768px) {
+            padding: 1rem 1.25rem;
+        }
+
+        .dossier-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid ${tokens.colors.borderShadow};
+            box-shadow: 0 1px 0 ${tokens.colors.borderLight};
+
+            .dossier-status {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+
+                .pulse-led {
+                    width: 7px;
+                    height: 7px;
+                    border-radius: ${tokens.radii.full};
+                    background: ${tokens.colors.accent};
+                    box-shadow: ${tokens.shadows.glowOrange};
+                    animation: pulse 1.8s infinite ease-in-out;
+                }
+
+                .dossier-label {
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                    color: ${tokens.colors.textMuted};
+                }
             }
-            
-            img {
-                width: 6rem;
-                height: 6rem;
-                object-fit: cover;
+
+            .dossier-vents {
+                ${ventSlots}
+            }
+        }
+
+        .dossier-content {
+            .dossier-identity {
+                display: flex;
+                align-items: baseline;
+                gap: 1rem;
+                flex-wrap: wrap;
+                margin-bottom: 0.75rem;
+
+                .specimen-name {
+                    font-family: ${tokens.fonts.primary};
+                    font-size: clamp(1.4rem, 3vw, 2rem);
+                    font-weight: 800;
+                    color: ${tokens.colors.textPrimary};
+                    letter-spacing: -0.02em;
+                    text-shadow: ${tokens.shadows.textEmbossed};
+                    margin: 0;
+                }
+
+                .specimen-kanji {
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: ${tokens.colors.textMuted};
+                }
+            }
+
+            .dossier-badges {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+                flex-wrap: wrap;
+                margin-bottom: 1rem;
+
+                .spec-pill {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 10px;
+                    border-radius: ${tokens.radii.sm};
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.75rem;
+                    background: ${tokens.colors.recessed};
+                    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.12), inset -1px -1px 2px rgba(255, 255, 255, 0.8);
+
+                    .label {
+                        color: ${tokens.colors.textMuted};
+                        font-weight: 600;
+                        font-size: 0.68rem;
+                    }
+
+                    .val {
+                        color: ${tokens.colors.textPrimary};
+                        font-weight: 700;
+                    }
+                }
+
+                .role-pill {
+                    border: 1px solid rgba(255, 71, 87, 0.3);
+                    .val {
+                        color: ${tokens.colors.accent};
+                    }
+                }
+
+                .fav-pill {
+                    background: rgba(29, 34, 44, 0.9);
+                    color: #fbbf24;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+                    .val {
+                        color: #ffffff;
+                    }
+                    .unit {
+                        color: #94a3b8;
+                        font-size: 0.65rem;
+                    }
+                }
+            }
+
+            .dossier-about-box {
+                background: ${tokens.colors.recessed};
+                border-radius: ${tokens.radii.md};
+                padding: 1rem 1.25rem;
+                box-shadow: ${tokens.shadows.recessed};
+                border: 1px solid rgba(255, 255, 255, 0.5);
+
+                .dossier-text {
+                    font-family: ${tokens.fonts.primary};
+                    font-size: 0.88rem;
+                    line-height: 1.6;
+                    color: ${tokens.colors.textPrimary};
+                    white-space: pre-line;
+                    margin: 0;
+
+                    &:not(.expanded) {
+                        display: -webkit-box;
+                        -webkit-line-clamp: 4;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    }
+                }
+
+                .expand-bio-btn {
+                    margin-top: 0.75rem;
+                    background: transparent;
+                    border: none;
+                    color: ${tokens.colors.accent};
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                    cursor: pointer;
+                    padding: 0;
+                    transition: ${tokens.transitions.fast};
+
+                    &:hover {
+                        color: ${tokens.colors.accentHover};
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
+    }
+
+    /* Big Image Viewport Console */
+    .big-image {
+        display: block;
+        padding: 1.75rem;
+        background: ${tokens.colors.chassis};
+        border-radius: ${tokens.radii.xl};
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow: ${tokens.shadows.card};
+        position: relative;
+        ${cornerScrews}
+        max-width: 540px;
+        width: 100%;
+        margin-bottom: 2rem;
+        transition: ${tokens.transitions.normal};
+
+        @media screen and (max-width: 768px) {
+            padding: 1.25rem;
+            border-radius: ${tokens.radii.lg};
+        }
+
+        .viewport-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid ${tokens.colors.borderShadow};
+            box-shadow: 0 1px 0 ${tokens.colors.borderLight};
+
+            .telemetry-info {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+
+                .led-indicator {
+                    width: 7px;
+                    height: 7px;
+                    border-radius: ${tokens.radii.full};
+                    background: ${tokens.colors.ledGreen};
+                    box-shadow: ${tokens.shadows.glowGreen};
+                    animation: pulse 2s infinite ease-in-out;
+
+                    &.loading {
+                        background: ${tokens.colors.ledAmber};
+                        box-shadow: ${tokens.shadows.glowAmber};
+                    }
+                }
+
+                .specimen-label {
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                    color: ${tokens.colors.textMuted};
+                }
+            }
+
+            .viewport-vents {
+                ${ventSlots}
+            }
+        }
+
+        .viewport-well {
+            position: relative;
+            padding: 12px;
+            background: ${tokens.colors.chassis};
+            border-radius: ${tokens.radii.lg};
+            box-shadow: ${tokens.shadows.recessed};
+            border: 1px solid rgba(186, 190, 204, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 380px;
+
+            .image-wrapper {
+                position: relative;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                img {
+                    width: 100%;
+                    height: auto;
+                    max-height: 520px;
+                    object-fit: contain;
+                    border-radius: ${tokens.radii.md};
+                    display: block;
+                    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.25);
+                    transition: opacity 0.3s ease;
+                }
+
+                .viewport-arrow {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 38px;
+                    height: 38px;
+                    border-radius: ${tokens.radii.full};
+                    background: rgba(224, 229, 236, 0.85);
+                    backdrop-filter: blur(4px);
+                    border: 1px solid rgba(255, 255, 255, 0.8);
+                    box-shadow: ${tokens.shadows.card};
+                    color: ${tokens.colors.textPrimary};
+                    font-size: 1.4rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: ${tokens.transitions.fast};
+                    z-index: 5;
+
+                    &:hover {
+                        color: ${tokens.colors.accent};
+                        box-shadow: ${tokens.shadows.floating};
+                        transform: translateY(-50%) scale(1.1);
+                    }
+
+                    &:active {
+                        transform: translateY(-50%) scale(0.95);
+                        box-shadow: ${tokens.shadows.pressed};
+                    }
+
+                    &.prev {
+                        left: 8px;
+                    }
+
+                    &.next {
+                        right: 8px;
+                    }
+                }
+            }
+
+            .empty-viewport {
+                padding: 3rem 1.5rem;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+
+                .empty-led {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: ${tokens.radii.full};
+                    background: ${tokens.colors.accent};
+                    box-shadow: ${tokens.shadows.glowOrange};
+                    margin-bottom: 0.5rem;
+                }
+
+                .empty-title {
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    color: ${tokens.colors.accent};
+                    letter-spacing: 0.08em;
+                    margin: 0;
+                }
+
+                .empty-sub {
+                    font-family: ${tokens.fonts.primary};
+                    font-size: 0.8rem;
+                    color: ${tokens.colors.textMuted};
+                    max-width: 320px;
+                    margin: 0;
+                }
+            }
+        }
+    }
+
+    /* Small Images Cartridge Selector Bank */
+    .small-images-panel {
+        width: min(92%, 1100px);
+        background: ${tokens.colors.chassis};
+        border-radius: ${tokens.radii.xl};
+        box-shadow: ${tokens.shadows.card};
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        padding: 1.75rem 2rem 2.25rem 2rem;
+        ${cornerScrews}
+
+        @media screen and (max-width: 768px) {
+            width: 100%;
+            padding: 1.25rem 1rem 1.75rem 1rem;
+            border-radius: ${tokens.radii.lg};
+        }
+
+        .panel-label-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid ${tokens.colors.borderShadow};
+            box-shadow: 0 1px 0 ${tokens.colors.borderLight};
+
+            .tray-title {
+                font-family: ${tokens.fonts.technical};
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                color: ${tokens.colors.textMuted};
+            }
+
+            .status-readout {
+                font-family: ${tokens.fonts.technical};
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: ${tokens.colors.accent};
+                letter-spacing: 0.08em;
+            }
+        }
+
+        .small-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            justify-content: center;
+
+            @media screen and (max-width: 768px) {
+                gap: 0.75rem;
+            }
+
+            .image-con {
                 cursor: pointer;
-                border-radius: 8px;
-                border: 3px solid rgba(255, 255, 255, 0.2);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                
-                @media screen and (max-width: 768px) {
-                    width: 5rem;
-                    height: 5rem;
+                transition: ${tokens.transitions.fast};
+
+                .thumbnail-frame {
+                    position: relative;
+                    padding: 6px;
+                    border-radius: ${tokens.radii.md};
+                    background: ${tokens.colors.chassis};
+                    box-shadow: ${tokens.shadows.card};
+                    border: 1px solid rgba(255, 255, 255, 0.8);
+                    transition: ${tokens.transitions.fast};
+
+                    img {
+                        width: 5.25rem;
+                        height: 5.25rem;
+                        object-fit: cover;
+                        border-radius: ${tokens.radii.sm};
+                        display: block;
+                        filter: grayscale(35%) contrast(0.95);
+                        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
+                        transition: ${tokens.transitions.fast};
+
+                        @media screen and (max-width: 768px) {
+                            width: 4rem;
+                            height: 4rem;
+                        }
+                    }
+
+                    .index-pip {
+                        position: absolute;
+                        bottom: 8px;
+                        right: 8px;
+                        font-family: ${tokens.fonts.technical};
+                        font-size: 0.6rem;
+                        font-weight: 700;
+                        padding: 1px 4px;
+                        background: rgba(45, 52, 54, 0.8);
+                        color: #ffffff;
+                        border-radius: 2px;
+                    }
                 }
-                
-                @media screen and (max-width: 480px) {
-                    width: 4rem;
-                    height: 4rem;
-                }
-                
+
                 &:hover {
-                    filter: grayscale(0) brightness(1.1) !important;
-                    transform: scale(1.1) !important;
+                    transform: translateY(-3px);
+
+                    .thumbnail-frame {
+                        box-shadow: ${tokens.shadows.floating};
+                        border-color: rgba(255, 255, 255, 1);
+
+                        img {
+                            filter: grayscale(0%) contrast(1.05);
+                        }
+                    }
+                }
+
+                &.active-cartridge {
+                    .thumbnail-frame {
+                        border: 2px solid ${tokens.colors.accent};
+                        box-shadow: ${tokens.shadows.glowOrange}, ${tokens.shadows.card};
+                        transform: scale(1.06);
+
+                        img {
+                            filter: grayscale(0%) contrast(1.1);
+                        }
+
+                        .index-pip {
+                            background: ${tokens.colors.accent};
+                            color: ${tokens.colors.accentForeground};
+                        }
+                    }
+                }
+
+                &:active {
+                    transform: translateY(1px);
                 }
             }
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.4;
         }
     }
 `;
 
-export default Gallery
+export default Gallery;

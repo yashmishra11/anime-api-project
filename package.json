@@ -13,10 +13,11 @@
     "styled-components": "^6.1.12",
     "web-vitals": "^2.1.4"
   },
-"devDependencies": {
-  "vite": "^4.0.0"
-},
+  "devDependencies": {
+    "vite": "^4.0.0"
+  },
   "scripts": {
+    "dev": "react-scripts start",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

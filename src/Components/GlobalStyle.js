@@ -1,12 +1,7 @@
-import {createGlobalStyle} from 'styled-components';
+import { createGlobalStyle } from 'styled-components';
+import { tokens } from '../theme/tokens';
 
 const GlobalStyle = createGlobalStyle`
-    @font-face {
-        font-family: naru;
-        src: url('naruto.ttf');
-        font-display: swap;
-    }
-    
     * {
         margin: 0;
         padding: 0;
@@ -17,26 +12,45 @@ const GlobalStyle = createGlobalStyle`
     
     html {
         scroll-behavior: smooth;
+        background-color: ${tokens.colors.chassis};
+        -webkit-overflow-scrolling: touch;
     }
     
     body {
-        font-family: 'naru', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        background-attachment: fixed;
+        font-family: ${tokens.fonts.primary};
+        background-color: ${tokens.colors.chassis};
+        position: relative;
         font-size: 1rem;
         line-height: 1.6;
-        color: #ffffff;
+        color: ${tokens.colors.textPrimary};
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         overflow-x: hidden;
+        min-height: 100vh;
+        
+        /* Hardware-accelerated fixed background on dedicated compositor layer */
+        &::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            background-color: ${tokens.colors.chassis};
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.6) 0%, transparent 45%),
+                radial-gradient(circle at 90% 90%, rgba(186, 190, 204, 0.25) 0%, transparent 40%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+            transform: translateZ(0);
+            will-change: transform;
+        }
         
         @media screen and (max-width: 768px) {
             font-size: 0.95rem;
         }
         
-        /* Custom Scrollbar - Modern Glass Effect */
+        /* Industrial Recessed Scrollbar */
         &::-webkit-scrollbar {
-            width: 12px;
+            width: 14px;
             
             @media screen and (max-width: 768px) {
                 width: 8px;
@@ -44,67 +58,55 @@ const GlobalStyle = createGlobalStyle`
         }
         
         &::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            margin: 4px 0;
+            background: ${tokens.colors.chassis};
+            box-shadow: inset 2px 2px 4px ${tokens.colors.borderShadow}, inset -2px -2px 4px ${tokens.colors.borderLight};
         }
         
         &::-webkit-scrollbar-thumb {
-            background: linear-gradient(
-                180deg,
-                rgba(255, 255, 255, 0.3) 0%,
-                rgba(255, 255, 255, 0.2) 100%
-            );
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            transition: all 0.3s ease;
+            background: ${tokens.colors.chassis};
+            border-radius: ${tokens.radii.full};
+            border: 2px solid ${tokens.colors.chassis};
+            box-shadow: 3px 3px 6px ${tokens.colors.borderShadow}, -3px -3px 6px ${tokens.colors.borderLight};
+            transition: ${tokens.transitions.fast};
             
             &:hover {
-                background: linear-gradient(
-                    180deg,
-                    rgba(255, 255, 255, 0.4) 0%,
-                    rgba(255, 255, 255, 0.3) 100%
-                );
-                border-color: rgba(255, 255, 255, 0.2);
+                box-shadow: 4px 4px 8px ${tokens.colors.borderShadow}, -4px -4px 8px ${tokens.colors.borderLight};
+                background: #d8dee8;
             }
             
             &:active {
-                background: linear-gradient(
-                    180deg,
-                    rgba(255, 255, 255, 0.5) 0%,
-                    rgba(255, 255, 255, 0.4) 100%
-                );
+                box-shadow: inset 2px 2px 4px ${tokens.colors.borderShadow}, inset -2px -2px 4px ${tokens.colors.borderLight};
             }
         }
         
         /* Firefox Scrollbar */
         scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05);
+        scrollbar-color: ${tokens.colors.borderDark} ${tokens.colors.chassis};
     }
     
-    /* Selection Color */
+    /* Selection Color with Safety Orange Accent */
     ::selection {
-        background: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
+        background: ${tokens.colors.accent};
+        color: ${tokens.colors.accentForeground};
     }
     
     ::-moz-selection {
-        background: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
+        background: ${tokens.colors.accent};
+        color: ${tokens.colors.accentForeground};
     }
     
-    /* Focus Styles */
+    /* Industrial Tactile Focus Rings */
     *:focus-visible {
-        outline: 2px solid rgba(255, 255, 255, 0.5);
+        outline: 2px solid ${tokens.colors.accent};
         outline-offset: 2px;
-        border-radius: 4px;
+        box-shadow: ${tokens.shadows.glowOrange};
+        border-radius: ${tokens.radii.sm};
     }
     
     /* Link Styles */
     a {
         color: inherit;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: ${tokens.transitions.normal};
     }
     
     /* Button Reset */
@@ -115,23 +117,12 @@ const GlobalStyle = createGlobalStyle`
         background: none;
     }
     
-    /* Image Optimization */
+    /* Image Optimization with Hardware Acceleration */
     img {
         max-width: 100%;
         height: auto;
         display: block;
-    }
-    
-    /* Smooth Transitions for Theme Changes */
-    * {
-        transition-property: background-color, border-color, color, fill, stroke;
-        transition-duration: 0.2s;
-        transition-timing-function: ease-in-out;
-    }
-    
-    /* Remove transition for transform and opacity for performance */
-    *:not(a):not(button):not(img) {
-        transition-property: background-color, border-color, color;
+        transform: translateZ(0);
     }
 `;
 
