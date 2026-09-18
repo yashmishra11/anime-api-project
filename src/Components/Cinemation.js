@@ -398,7 +398,7 @@ export default function Cinemation() {
     const handleButtonMouseLeave = () => {
         hoverTimeoutRef.current = setTimeout(() => {
             setIsButtonHovered(false);
-        }, 220);
+        }, 120);
     };
 
     const handleCardMouseEnter = () => {
@@ -409,7 +409,7 @@ export default function Cinemation() {
     const handleCardMouseLeave = () => {
         hoverTimeoutRef.current = setTimeout(() => {
             setIsCardHovered(false);
-        }, 220);
+        }, 120);
     };
 
     return (
@@ -547,13 +547,14 @@ export default function Cinemation() {
                             </button>
 
                             {/* THE SPECIMEN ORIGIN BUTTON (Hover to reveal anime) */}
-                            <div className="origin-button-slot">
+                            <div
+                                className="origin-button-slot"
+                                onMouseEnter={handleButtonMouseEnter}
+                                onMouseLeave={handleButtonMouseLeave}
+                            >
                                 <button
                                     type="button"
                                     className={`identify-anime-btn ${showOriginCard ? 'is-active' : ''}`}
-                                    onMouseEnter={handleButtonMouseEnter}
-                                    onMouseLeave={handleButtonMouseLeave}
-                                    onClick={() => setIsButtonHovered(!isButtonHovered)}
                                     title="Hover to identify which anime this scenery is from"
                                 >
                                     <span className="radar-pulse" />
@@ -939,9 +940,9 @@ const CinemationStyled = styled.div`
             width: 46px;
             height: 56px;
             border-radius: ${tokens.radii.sm};
-            background: rgba(15, 17, 23, 0.65);
+            background: rgba(15, 17, 23, 0.78);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #ffffff;
             font-size: 2rem;
             line-height: 1;
@@ -949,16 +950,18 @@ const CinemationStyled = styled.div`
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 15;
+            z-index: 60;
+            opacity: 0.8;
             transition: ${tokens.transitions.fast};
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 
             &:hover {
                 background: ${tokens.colors.accent};
                 color: #ffffff;
                 border-color: ${tokens.colors.accent};
-                transform: translateY(-50%) scale(1.06);
-                box-shadow: 0 0 20px rgba(255, 94, 40, 0.6);
+                transform: translateY(-50%) scale(1.08);
+                box-shadow: 0 0 22px rgba(255, 94, 40, 0.7);
+                opacity: 1;
             }
 
             &.chevron-prev {
@@ -1077,6 +1080,13 @@ const CinemationStyled = styled.div`
     .origin-button-slot {
         position: relative;
 
+        &:hover .origin-dossier-popover,
+        &:focus-within .origin-dossier-popover {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
         .identify-anime-btn {
             position: relative;
             display: flex;
@@ -1125,14 +1135,14 @@ const CinemationStyled = styled.div`
             }
         }
 
-        /* FLOATING DOSSIER POPOVER */
+        /* FLOATING DOSSIER POPOVER - Shifted left (4.75rem) so it NEVER blocks the next chevron */
         .origin-dossier-popover {
             position: absolute;
             bottom: calc(100% + 14px);
-            right: 0;
-            width: 430px;
+            right: 4.75rem;
+            width: 420px;
             border-radius: ${tokens.radii.lg};
-            background: rgba(14, 16, 24, 0.94);
+            background: rgba(14, 16, 24, 0.96);
             backdrop-filter: blur(24px);
             border: 1.5px solid rgba(255, 94, 40, 0.6);
             box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 25px rgba(255, 94, 40, 0.2);
@@ -1141,7 +1151,7 @@ const CinemationStyled = styled.div`
             opacity: 0;
             transform: translateY(12px) scale(0.96);
             pointer-events: none;
-            transition: opacity 250ms cubic-bezier(0.16, 1, 0.3, 1), transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 
             &.revealed {
                 opacity: 1;
@@ -1149,9 +1159,9 @@ const CinemationStyled = styled.div`
                 pointer-events: auto;
             }
 
-            @media (max-width: 540px) {
+            @media (max-width: 680px) {
+                right: 0;
                 width: calc(100vw - 3rem);
-                right: -10px;
             }
 
             .dossier-header-strip {
