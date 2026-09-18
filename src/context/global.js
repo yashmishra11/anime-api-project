@@ -1,10 +1,16 @@
-import React, { createContext, useContext, useReducer } from "react";
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useState } from "react";
+import {
+    fetchAniList,
+    POPULAR_ANIME_QUERY,
+    AIRING_ANIME_QUERY,
+    UPCOMING_ANIME_QUERY,
+    SEARCH_ANIME_QUERY,
+    normalizeAniListMedia
+} from "../services/anilist";
 
 const GlobalContext = createContext();
 
-const baseUrl = "https://api.jikan.moe/v4";
-
-// Actions
+// Action Types
 const LOADING = "LOADING";
 const SEARCH = "SEARCH";
 const CLEAR_SEARCH = "CLEAR_SEARCH";
@@ -13,221 +19,120 @@ const GET_UPCOMING_ANIME = "GET_UPCOMING_ANIME";
 const GET_AIRING_ANIME = "GET_AIRING_ANIME";
 const GET_PICTURES = "GET_PICTURES";
 
-// High-fidelity fallback catalog so the grid and sidebar are never empty if Jikan rate-limits
+// Resilient fallback catalog formatted to match the AniList normalized structure
 const FALLBACK_POPULAR_ANIME = [
     {
+        id: 154587,
         mal_id: 52991,
-        title: "Sousou no Frieren",
+        title: "Frieren: Beyond Journey's End",
         title_english: "Frieren: Beyond Journey's End",
-        score: 9.26,
+        title_romaji: "Sousou no Frieren",
+        score: 9.3,
         type: "TV",
         episodes: 28,
         status: "Finished Airing",
         year: 2023,
         genres: [{ name: "Fantasy" }, { name: "Adventure" }, { name: "Drama" }],
         images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1015/138006l.webp" }
-        }
+            jpg: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-573TGNQhA1p1.jpg" },
+            webp: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-573TGNQhA1p1.jpg" }
+        },
+        bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/154587-n2btaSMjhUOI.jpg"
     },
     {
+        id: 5114,
         mal_id: 5114,
         title: "Fullmetal Alchemist: Brotherhood",
         title_english: "Fullmetal Alchemist: Brotherhood",
-        score: 9.11,
+        title_romaji: "Hagane no Renkinjutsushi: Fullmetal Alchemist",
+        score: 9.1,
         type: "TV",
         episodes: 64,
         status: "Finished Airing",
         year: 2009,
         genres: [{ name: "Action" }, { name: "Adventure" }, { name: "Fantasy" }],
         images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1208/94745l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1208/94745l.webp" }
-        }
+            jpg: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx5114-1zYmMWWw9v1q.jpg" },
+            webp: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx5114-1zYmMWWw9v1q.jpg" }
+        },
+        bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/5114-p1e8iZp4yV8U.jpg"
     },
     {
+        id: 9253,
         mal_id: 9253,
         title: "Steins;Gate",
         title_english: "Steins;Gate",
-        score: 9.07,
+        title_romaji: "Steins;Gate",
+        score: 9.0,
         type: "TV",
         episodes: 24,
         status: "Finished Airing",
         year: 2011,
         genres: [{ name: "Sci-Fi" }, { name: "Suspense" }, { name: "Drama" }],
         images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1935/127974l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1935/127974l.webp" }
-        }
+            jpg: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-e9bg5yZt4j2R.jpg" },
+            webp: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-e9bg5yZt4j2R.jpg" }
+        },
+        bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/9253-eU4vWl3t4y3k.jpg"
     },
     {
-        mal_id: 28977,
-        title: "Gintama°",
-        title_english: "Gintama Season 4",
-        score: 9.05,
+        id: 101922,
+        mal_id: 38000,
+        title: "Demon Slayer: Kimetsu no Yaiba",
+        title_english: "Demon Slayer: Kimetsu no Yaiba",
+        title_romaji: "Kimetsu no Yaiba",
+        score: 8.5,
         type: "TV",
-        episodes: 51,
+        episodes: 26,
         status: "Finished Airing",
-        year: 2015,
-        genres: [{ name: "Comedy" }, { name: "Action" }, { name: "Sci-Fi" }],
+        year: 2019,
+        genres: [{ name: "Action" }, { name: "Fantasy" }, { name: "Supernatural" }],
         images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/3/72078l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/3/72078l.webp" }
-        }
+            jpg: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-PEn1CTDYeaInitialize.jpg" },
+            webp: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-PEn1CTDYeaInitialize.jpg" }
+        },
+        bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/101922-YATy0mFs4p1c.jpg"
     },
     {
-        mal_id: 1535,
-        title: "Death Note",
-        title_english: "Death Note",
-        score: 8.62,
-        type: "TV",
-        episodes: 37,
-        status: "Finished Airing",
-        year: 2006,
-        genres: [{ name: "Suspense" }, { name: "Supernatural" }, { name: "Mystery" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/9/9453l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/9/9453l.webp" }
-        }
-    },
-    {
-        mal_id: 43608,
-        title: "Kaguya-sama wa Kokurasetai: Ultra Romantic",
-        title_english: "Kaguya-sama: Love is War - Ultra Romantic",
-        score: 9.02,
-        type: "TV",
-        episodes: 13,
-        status: "Finished Airing",
-        year: 2022,
-        genres: [{ name: "Romance" }, { name: "Comedy" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1160/122627l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1160/122627l.webp" }
-        }
-    },
-    {
-        mal_id: 11061,
-        title: "Hunter x Hunter (2011)",
-        title_english: "Hunter x Hunter",
-        score: 9.03,
-        type: "TV",
-        episodes: 148,
-        status: "Finished Airing",
-        year: 2011,
-        genres: [{ name: "Action" }, { name: "Adventure" }, { name: "Fantasy" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1337/99013l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1337/99013l.webp" }
-        }
-    },
-    {
-        mal_id: 16498,
-        title: "Shingeki no Kyojin",
-        title_english: "Attack on Titan",
-        score: 8.55,
-        type: "TV",
-        episodes: 25,
-        status: "Finished Airing",
-        year: 2013,
-        genres: [{ name: "Action" }, { name: "Suspense" }, { name: "Drama" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/10/47347l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/10/47347l.webp" }
-        }
-    },
-    {
+        id: 113415,
         mal_id: 40748,
-        title: "Jujutsu Kaisen",
-        title_english: "Jujutsu Kaisen",
-        score: 8.59,
+        title: "JUJUTSU KAISEN",
+        title_english: "JUJUTSU KAISEN",
+        title_romaji: "Jujutsu Kaisen",
+        score: 8.6,
         type: "TV",
         episodes: 24,
         status: "Finished Airing",
         year: 2020,
         genres: [{ name: "Action" }, { name: "Fantasy" }],
         images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1171/109222l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1171/109222l.webp" }
-        }
-    },
-    {
-        mal_id: 50265,
-        title: "Spy x Family",
-        title_english: "Spy x Family",
-        score: 8.48,
-        type: "TV",
-        episodes: 12,
-        status: "Finished Airing",
-        year: 2022,
-        genres: [{ name: "Comedy" }, { name: "Action" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1441/122795l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1441/122795l.webp" }
-        }
-    },
-    {
-        mal_id: 41467,
-        title: "Bleach: Sennen Kessen-hen",
-        title_english: "Bleach: Thousand-Year Blood War",
-        score: 8.98,
-        type: "TV",
-        episodes: 13,
-        status: "Finished Airing",
-        year: 2022,
-        genres: [{ name: "Action" }, { name: "Adventure" }, { name: "Fantasy" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1764/126627l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1764/126627l.webp" }
-        }
-    },
-    {
-        mal_id: 38000,
-        title: "Kimetsu no Yaiba",
-        title_english: "Demon Slayer: Kimetsu no Yaiba",
-        score: 8.47,
-        type: "TV",
-        episodes: 26,
-        status: "Finished Airing",
-        year: 2019,
-        genres: [{ name: "Action" }, { name: "Fantasy" }],
-        images: {
-            jpg: { large_image_url: "https://cdn.myanimelist.net/images/anime/1286/99889l.jpg" },
-            webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1286/99889l.webp" }
-        }
+            jpg: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-bbBWj4pwa30n.jpg" },
+            webp: { large_image_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-bbBWj4pwa30n.jpg" }
+        },
+        bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/113415-jQGo780nneInitialize.jpg"
     }
 ];
 
-// Helper: safe fetch with sessionStorage caching and retry for 429
-const safeFetch = async (url, retries = 3, delay = 1000) => {
+// Helper: Query with in-memory / sessionStorage cache
+const cachedFetch = async (cacheKey, queryFn) => {
     try {
-        const cached = sessionStorage.getItem(url);
+        const cached = sessionStorage.getItem(cacheKey);
         if (cached) {
             const parsed = JSON.parse(cached);
-            if (parsed !== null && parsed !== undefined) return parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         }
     } catch {}
 
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-            const response = await fetch(url);
-            if (response.status === 429) {
-                console.warn(`[Jikan Throttled] Retrying ${url} in ${delay * attempt}ms...`);
-                await new Promise((r) => setTimeout(r, delay * attempt));
-                continue;
-            }
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.data !== undefined) {
-                    try {
-                        sessionStorage.setItem(url, JSON.stringify(data.data));
-                    } catch {}
-                    return data.data;
-                }
-            }
-        } catch (err) {
-            console.error(`Attempt ${attempt} error for ${url}:`, err);
-            await new Promise((r) => setTimeout(r, delay * attempt));
+    try {
+        const result = await queryFn();
+        if (result && Array.isArray(result) && result.length > 0) {
+            try {
+                sessionStorage.setItem(cacheKey, JSON.stringify(result));
+            } catch {}
+            return result;
         }
+    } catch (err) {
+        console.error(`[AniList Query Error] for ${cacheKey}:`, err);
     }
     return null;
 };
@@ -291,7 +196,7 @@ export const GlobalContextProvider = ({ children }) => {
     };
 
     const [state, dispatch] = useReducer(reducer, initialState);
-    const [search, setSearch] = React.useState('');
+    const [search, setSearch] = useState('');
 
     // Handle input change
     const handleChange = (e) => {
@@ -311,57 +216,78 @@ export const GlobalContextProvider = ({ children }) => {
         }
     };
 
-    // Fetch popular anime
-    const getPopularAnime = React.useCallback(async () => {
+    // Fetch popular anime from AniList
+    const getPopularAnime = useCallback(async () => {
         dispatch({ type: LOADING });
-        const data = await safeFetch(`${baseUrl}/top/anime?filter=bypopularity`);
+        const data = await cachedFetch('anilist_popular_feed', async () => {
+            const res = await fetchAniList(POPULAR_ANIME_QUERY, { page: 1, perPage: 24 });
+            const mediaList = res?.Page?.media || [];
+            return mediaList.map(normalizeAniListMedia);
+        });
+
         dispatch({
             type: GET_POPULAR_ANIME,
             payload: data || FALLBACK_POPULAR_ANIME
         });
     }, []);
 
-    // Fetch upcoming anime
-    const getUpcomingAnime = React.useCallback(async () => {
+    // Fetch upcoming anime from AniList
+    const getUpcomingAnime = useCallback(async () => {
         dispatch({ type: LOADING });
-        const data = await safeFetch(`${baseUrl}/top/anime?filter=upcoming`);
+        const data = await cachedFetch('anilist_upcoming_feed', async () => {
+            const res = await fetchAniList(UPCOMING_ANIME_QUERY, { page: 1, perPage: 24 });
+            const mediaList = res?.Page?.media || [];
+            return mediaList.map(normalizeAniListMedia);
+        });
+
         dispatch({
             type: GET_UPCOMING_ANIME,
             payload: data || []
         });
     }, []);
 
-    // Fetch airing anime
-    const getAiringAnime = React.useCallback(async () => {
+    // Fetch airing anime from AniList
+    const getAiringAnime = useCallback(async () => {
         dispatch({ type: LOADING });
-        const data = await safeFetch(`${baseUrl}/top/anime?filter=airing`);
+        const data = await cachedFetch('anilist_airing_feed', async () => {
+            const res = await fetchAniList(AIRING_ANIME_QUERY, { page: 1, perPage: 24 });
+            const mediaList = res?.Page?.media || [];
+            return mediaList.map(normalizeAniListMedia);
+        });
+
         dispatch({
             type: GET_AIRING_ANIME,
             payload: data || []
         });
     }, []);
 
-    // Search anime
-    const searchAnime = React.useCallback(async (anime) => {
+    // Search anime on AniList
+    const searchAnime = useCallback(async (queryStr) => {
+        if (!queryStr || !queryStr.trim()) return;
         dispatch({ type: LOADING });
-        const data = await safeFetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(anime)}&order_by=popularity&sort=asc&sfw`);
-        dispatch({ type: SEARCH, payload: data || [] });
+        try {
+            const res = await fetchAniList(SEARCH_ANIME_QUERY, { search: queryStr.trim(), page: 1, perPage: 24 });
+            const mediaList = res?.Page?.media || [];
+            const normalized = mediaList.map(normalizeAniListMedia);
+            dispatch({ type: SEARCH, payload: normalized });
+        } catch (err) {
+            console.error('[AniList Search Error]:', err);
+            dispatch({ type: SEARCH, payload: [] });
+        }
     }, []);
 
-    // Get character pictures
-    const getAnimePictures = React.useCallback(async (id) => {
+    // Get pictures compatibility
+    const getAnimePictures = useCallback(async (id) => {
         dispatch({ type: LOADING });
-        const data = await safeFetch(`https://api.jikan.moe/v4/characters/${id}/pictures`);
-        dispatch({ type: GET_PICTURES, payload: data || [] });
+        dispatch({ type: GET_PICTURES, payload: [] });
     }, []);
 
-    // Initial render
-    React.useEffect(() => {
+    // Initial render: Fetch popular and airing
+    useEffect(() => {
         getPopularAnime();
-        // Pre-fetch airing anime for the weekly top-rated slider with a 600ms stagger
         const timer = setTimeout(() => {
             getAiringAnime();
-        }, 600);
+        }, 300);
         return () => clearTimeout(timer);
     }, [getPopularAnime, getAiringAnime]);
 

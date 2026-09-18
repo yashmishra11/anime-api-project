@@ -22,10 +22,12 @@ function Sidebar() {
             <h3>Top 5 Popular</h3>
             <div className='anime'>
                 {sorted.slice(0, 5).map((anime, index) => {
+                    const targetId = anime.id || anime.mal_id;
+                    const posterUrl = anime.coverImage?.large || anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url;
                     return (
-                        <Link to={`/anime/${anime.mal_id}`} key={anime.mal_id}>
+                        <Link to={`/anime/${targetId}`} key={targetId}>
                             <div className="img-slot">
-                                <img src={anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url} alt={anime.title || "Anime"} />
+                                <img src={posterUrl} alt={anime.title || "Anime"} />
                                 <span className="rank-badge">0{index + 1}</span>
                             </div>
                             <div className="anime-meta">

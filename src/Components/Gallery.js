@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { tokens, cornerScrews, ventSlots } from '../theme/tokens';
+import { fetchAniList, CHARACTER_DOSSIER_QUERY } from '../services/anilist';
 
 function Gallery() {
     const { id } = useParams();
@@ -30,102 +31,61 @@ function Gallery() {
         const loadSpecimenData = async () => {
             setLoading(true);
 
-            // 1. Fetch or retrieve character details
+            // 1. Check persistent sessionStorage
             const cacheKeyInfo = `character_dossier_${id}`;
-            let charInfo = null;
             try {
                 const cached = sessionStorage.getItem(cacheKeyInfo);
-                if (cached) charInfo = JSON.parse(cached);
-            } catch {}
-
-            if (!charInfo) {
-                try {
-                    const res = await fetch(`https://api.jikan.moe/v4/characters/${id}`);
-                    if (res.status === 429) {
-                        await new Promise((r) => setTimeout(r, 1200));
-                        const retry = await fetch(`https://api.jikan.moe/v4/characters/${id}`);
-                        const d = await retry.json();
-                        if (d?.data) charInfo = d.data;
-                    } else if (res.ok) {
-                        const d = await res.json();
-                        if (d?.data) charInfo = d.data;
-                    }
-
-                    if (charInfo) {
-                        try {
-                            sessionStorage.setItem(cacheKeyInfo, JSON.stringify(charInfo));
-                        } catch {}
-                    }
-                } catch (e) {
-                    console.warn('Could not fetch character dossier:', e);
-                }
-            }
-
-            if (isMounted && charInfo) {
-                setCharacter(charInfo);
-                document.title = `${charInfo.name || 'Specimen'} // Character Dossier - AniLog`;
-            } else if (isMounted && passedChar?.name) {
-                document.title = `${passedChar.name} // Character Dossier - AniLog`;
-            }
-
-            // 2. Fetch or retrieve character gallery pictures
-            const cacheKeyPics = `character_gallery_${id}`;
-            let fetchedPics = null;
-            try {
-                const cached = sessionStorage.getItem(cacheKeyPics);
-                if (cached) fetchedPics = JSON.parse(cached);
-            } catch {}
-
-            if (!fetchedPics) {
-                try {
-                    await new Promise((r) => setTimeout(r, 350));
-                    const res = await fetch(`https://api.jikan.moe/v4/characters/${id}/pictures`);
-                    if (res.status === 429) {
-                        await new Promise((r) => setTimeout(r, 1200));
-                        const retry = await fetch(`https://api.jikan.moe/v4/characters/${id}/pictures`);
-                        const d = await retry.json();
-                        if (d?.data) fetchedPics = d.data;
-                    } else if (res.ok) {
-                        const d = await res.json();
-                        if (d?.data) fetchedPics = d.data;
-                    }
-
-                    if (fetchedPics) {
-                        try {
-                            sessionStorage.setItem(cacheKeyPics, JSON.stringify(fetchedPics));
-                        } catch {}
-                    }
-                } catch (e) {
-                    console.warn('Could not fetch character pictures:', e);
-                }
-            }
-
-            if (isMounted) {
-                // Build deduplicated image array, guaranteeing at least the portrait
-                const combined = [];
-                const mainImg =
-                    charInfo?.images?.jpg?.image_url ||
-                    charInfo?.images?.webp?.image_url ||
-                    passedChar?.images?.jpg?.image_url ||
-                    passedChar?.images?.webp?.image_url;
-
-                if (mainImg) {
-                    combined.push({ jpg: { image_url: mainImg } });
-                }
-
-                if (Array.isArray(fetchedPics)) {
-                    fetchedPics.forEach((pic) => {
-                        const url = pic?.jpg?.image_url || pic?.image_url;
-                        if (url && !combined.some((c) => c.jpg?.image_url === url)) {
-                            combined.push({ jpg: { image_url: url } });
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed && parsed.name) {
+                        setCharacter(parsed);
+                        if (parsed.images?.jpg?.image_url) {
+                            setPictures([{ jpg: { image_url: parsed.images.jpg.image_url } }]);
                         }
-                    });
+                        setLoading(false);
+                        return;
+                    }
                 }
+            } catch {}
 
-                if (combined.length > 0) {
-                    setPictures(combined);
+            try {
+                const data = await fetchAniList(CHARACTER_DOSSIER_QUERY, { id: Number(id) });
+                const char = data?.Character;
+                if (char && isMounted) {
+                    const imgUrl = char.image?.large || char.image?.medium || initialPortrait;
+                    const cleanBio = char.description
+                        ? char.description.replace(/<[^>]*>?/gm, '').replace(/&quot;/g, '"').replace(/&#039;/g, "'")
+                        : 'No telemetry dossier recorded for this specimen.';
+
+                    const normalizedChar = {
+                        id: char.id,
+                        name: char.name?.full || char.name?.native || passedChar?.name || 'Unknown Specimen',
+                        name_kanji: char.name?.native || null,
+                        about: cleanBio,
+                        images: {
+                            jpg: { image_url: imgUrl },
+                            webp: { image_url: imgUrl }
+                        },
+                        role: passedRole,
+                        gender: char.gender || null,
+                        age: char.age || null,
+                        media: char.media?.nodes || []
+                    };
+
+                    setCharacter(normalizedChar);
+                    if (imgUrl) {
+                        setPictures([{ jpg: { image_url: imgUrl } }]);
+                    }
+                    document.title = `${normalizedChar.name} // Character Dossier - AniLog`;
+
+                    try {
+                        sessionStorage.setItem(cacheKeyInfo, JSON.stringify(normalizedChar));
+                    } catch {}
                 }
-                setLoading(false);
+            } catch (e) {
+                console.warn('[AniList] Could not fetch character dossier:', e);
+            } finally {
+                if (isMounted) setLoading(false);
             }
         };
 
@@ -134,7 +94,7 @@ function Gallery() {
         return () => {
             isMounted = false;
         };
-    }, [id, passedChar]);
+    }, [id, passedChar, initialPortrait, passedRole]);
 
     // Keyboard navigation
     useEffect(() => {

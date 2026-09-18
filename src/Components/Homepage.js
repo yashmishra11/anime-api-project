@@ -5,6 +5,8 @@ import styled from 'styled-components';
 import Upcoming from './Upcoming';
 import Airing from './Airing';
 import GenreSlider from './GenreSlider';
+import WatchlistFeed from './WatchlistFeed';
+import AuthButton from './AuthButton';
 import { tokens, cornerScrews, ventSlots } from '../theme/tokens';
 
 function Homepage() {
@@ -30,6 +32,8 @@ function Homepage() {
             document.title = 'AniLog // Live Airing Transmissions';
         } else if (rendered === 'upcoming') {
             document.title = 'AniLog // Upcoming Release Queue';
+        } else if (rendered === 'watchlist') {
+            document.title = 'AniLog // Personal Watchlist Archive';
         }
     }, [rendered, isSearch, search]);
 
@@ -41,6 +45,8 @@ function Homepage() {
                 return <Airing selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
             case 'upcoming':
                 return <Upcoming selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
+            case 'watchlist':
+                return <WatchlistFeed />;
             default:
                 return <Popular selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
         }
@@ -61,13 +67,14 @@ function Homepage() {
                                 ? 'POPULAR SPECIMENS'
                                 : rendered === 'airing'
                                 ? 'LIVE AIRING FEED'
-                                : 'UPCOMING PIPELINE'}
+                                : rendered === 'upcoming'
+                                ? 'UPCOMING PIPELINE'
+                                : 'PERSONAL WATCHLIST ARCHIVE'}
                         </span>
                     </div>
 
                     <div className='telemetry-meta'>
-                        <span className='telemetry-led' />
-                        <span className='status-pill'>STATION MK-IV</span>
+                        <AuthButton onOpenWatchlist={() => setRendered('watchlist')} />
                         <div className='console-vents'>
                             <span />
                         </div>
@@ -122,9 +129,19 @@ function Homepage() {
                             Upcoming
                         </button>
                     </div>
+
+                    <div className='filter-btn-watchlist-filter'>
+                        <button 
+                            className={rendered === 'watchlist' ? 'active-key' : ''}
+                            onClick={() => setRendered('watchlist')}
+                        >
+                            <span className="key-indicator" />
+                            Watchlist
+                        </button>
+                    </div>
                 </div>
             </header>
-            {!isSearch && (
+            {!isSearch && rendered !== 'watchlist' && (
                 <>
                     <GenreSlider />
                     <CategoryDeckStyled>
@@ -283,7 +300,8 @@ const HomepageStyled = styled.div`
             /* Physical mechanical switch buttons */
             .filter-btn-popular-filter button,
             .filter-btn-airing-filter button,
-            .filter-btn-upcoming-filter button {
+            .filter-btn-upcoming-filter button,
+            .filter-btn-watchlist-filter button {
                 position: relative;
                 display: flex;
                 align-items: center;

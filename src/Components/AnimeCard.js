@@ -3,13 +3,17 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { tokens, cornerScrews } from '../theme/tokens';
 
+import WatchlistButton from './WatchlistButton';
+
 function AnimeCard({ anime }) {
     if (!anime) return null;
 
     const {
+        id,
         mal_id,
         title,
         images,
+        coverImage,
         score,
         type,
         episodes,
@@ -19,13 +23,14 @@ function AnimeCard({ anime }) {
         aired
     } = anime;
 
-    const imageUrl = images?.webp?.large_image_url || images?.jpg?.large_image_url || images?.jpg?.image_url;
-    const primaryGenre = genres && genres.length > 0 ? genres[0].name : 'ANIME';
-    const isAiring = status === 'Currently Airing';
+    const targetId = id || mal_id;
+    const imageUrl = coverImage?.large || coverImage?.extraLarge || images?.webp?.large_image_url || images?.jpg?.large_image_url || images?.jpg?.image_url;
+    const primaryGenre = genres && genres.length > 0 ? (genres[0].name || genres[0]) : 'ANIME';
+    const isAiring = status === 'Currently Airing' || status === 'RELEASING';
     const releaseYear = year || aired?.prop?.from?.year || null;
 
     return (
-        <CardStyled to={`/anime/${mal_id}`}>
+        <CardStyled to={`/anime/${targetId}`}>
             <div className="card-chassis">
                 {/* Visual Frame */}
                 <div className="media-viewport">
@@ -56,7 +61,9 @@ function AnimeCard({ anime }) {
 
                     <div className="spec-row">
                         <span className="genre-pill">{primaryGenre}</span>
-                        {releaseYear && <span className="year-label">{releaseYear}</span>}
+                        <div className="card-action-slot" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                            <WatchlistButton anime={anime} variant="compact" />
+                        </div>
                     </div>
                 </div>
             </div>

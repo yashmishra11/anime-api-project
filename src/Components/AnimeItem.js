@@ -1,25 +1,27 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { tokens, cornerScrews, ventSlots, crtScanlines } from '../theme/tokens';
 import { useGlobalContext } from '../context/global';
+import { fetchAniList, ANIME_DETAILS_QUERY, normalizeAniListMedia } from '../services/anilist';
+import WatchlistButton from './WatchlistButton';
 
 function AnimeItem() {
-    const {id} = useParams();
+    const { id } = useParams();
     const { popularAnime, upcomingAnime, airingAnime } = useGlobalContext();
 
-    //states
-    const [anime, setAnime] = React.useState({});
-    const [loadingAnime, setLoadingAnime] = React.useState(true);
-    const [relations, setRelations] = React.useState([]);
-    const [loadingRelations, setLoadingRelations] = React.useState(true);
-    const [relatedDetails, setRelatedDetails] = React.useState({});
-    const [characters, setCharacters] = React.useState([]);
-    const [loadingChars, setLoadingChars] = React.useState(true);
-    const [showAllChars, setShowAllChars] = React.useState(false);
-    const [showMore, setShowMore] = React.useState(false);
+    // states
+    const [anime, setAnime] = useState({});
+    const [loadingAnime, setLoadingAnime] = useState(true);
+    const [relations, setRelations] = useState([]);
+    const [loadingRelations, setLoadingRelations] = useState(true);
+    const [relatedDetails, setRelatedDetails] = useState({});
+    const [characters, setCharacters] = useState([]);
+    const [loadingChars, setLoadingChars] = useState(true);
+    const [showAllChars, setShowAllChars] = useState(false);
+    const [showMore, setShowMore] = useState(false);
 
-    //destructure anime
+    // destructure anime
     const {
         title, synopsis, trailer,
         duration, aired, season,
@@ -27,169 +29,95 @@ function AnimeItem() {
         popularity, status, rating, source
     } = anime;
 
-    // Get anime by id with robust multi-tier fallback, caching, and exponential backoff
-    const getAnime = React.useCallback(async(animeId) => {
-        const cacheKey = `anime_full_${animeId}`;
-        
-        // 1. Check persistent sessionStorage first
+    // Load anime specs from AniList GraphQL in a single request
+    const loadAnimeSpecs = useCallback(async (animeId) => {
+        setLoadingAnime(true);
+        setLoadingRelations(true);
+        setLoadingChars(true);
+
+        const cacheKey = `anime_spec_${animeId}`;
         try {
             const cached = sessionStorage.getItem(cacheKey);
             if (cached) {
                 const parsed = JSON.parse(cached);
-                if (parsed && parsed.title) {
-                    setAnime(parsed);
+                if (parsed && parsed.anime) {
+                    setAnime(parsed.anime);
+                    setCharacters(parsed.characters || []);
+                    setRelations(parsed.relations || []);
+                    setRelatedDetails(parsed.relatedDetails || {});
                     setLoadingAnime(false);
-                    if (Array.isArray(parsed.relations) && parsed.relations.length > 0) {
-                        setRelations(parsed.relations);
-                        setLoadingRelations(false);
-                    }
-                    return parsed;
+                    setLoadingRelations(false);
+                    setLoadingChars(false);
+                    return;
                 }
             }
         } catch {}
 
-        // 2. Immediate partial hydration from global context if available
-        const globalMatch = [...(popularAnime || []), ...(upcomingAnime || []), ...(airingAnime || [])].find(
-            (a) => String(a.mal_id) === String(animeId)
-        );
-        if (globalMatch && globalMatch.title) {
-            setAnime(globalMatch);
-        }
+        try {
+            const res = await fetchAniList(ANIME_DETAILS_QUERY, { id: Number(animeId) });
+            const media = res?.Media;
+            if (media) {
+                const norm = normalizeAniListMedia(media);
 
-        // 3. Fetch from Jikan API with retries & fallback to standard endpoint
-        const endpoints = [
-            `https://api.jikan.moe/v4/anime/${animeId}/full`,
-            `https://api.jikan.moe/v4/anime/${animeId}`
-        ];
-
-        for (const endpoint of endpoints) {
-            for (let attempt = 1; attempt <= 3; attempt++) {
-                try {
-                    const response = await fetch(endpoint);
-                    if (response.status === 429) {
-                        console.warn(`[Jikan Throttled] Spec retrieval for ${animeId} attempt ${attempt}, waiting ${1000 * attempt}ms...`);
-                        await new Promise(r => setTimeout(r, 1000 * attempt));
-                        continue;
-                    }
-                    if (response.ok) {
-                        const json = await response.json();
-                        const data = json?.data;
-                        if (data && data.title) {
-                            setAnime(data);
-                            setLoadingAnime(false);
-                            try {
-                                sessionStorage.setItem(cacheKey, JSON.stringify(data));
-                            } catch {}
-
-                            if (Array.isArray(data.relations) && data.relations.length > 0) {
-                                setRelations(data.relations);
-                                setLoadingRelations(false);
-                                try {
-                                    sessionStorage.setItem(`anime_relations_${animeId}`, JSON.stringify(data.relations));
-                                } catch {}
-                            }
-                            return data;
+                const formattedChars = media.characters?.edges?.map((edge) => ({
+                    role: edge.role === 'MAIN' ? 'Main' : 'Supporting',
+                    character: {
+                        id: edge.node.id,
+                        mal_id: edge.node.id,
+                        name: edge.node.name?.full || 'Unknown',
+                        images: {
+                            jpg: { image_url: edge.node.image?.large || edge.node.image?.medium },
+                            webp: { image_url: edge.node.image?.large || edge.node.image?.medium }
                         }
                     }
-                } catch (err) {
-                    console.error(`Error fetching from ${endpoint}:`, err);
-                }
-            }
-        }
+                })) || [];
 
-        // 4. Final safety fallback: If API failed completely and we have a global match
-        if (globalMatch) {
-            setAnime(globalMatch);
-        }
-        setLoadingAnime(false);
-        return null;
-    }, [popularAnime, upcomingAnime, airingAnime]);
+                const formattedRelations = media.relations?.edges?.map((edge) => ({
+                    relation: edge.relationType,
+                    entry: [
+                        {
+                            id: edge.node.id,
+                            mal_id: edge.node.id,
+                            name: edge.node.title?.english || edge.node.title?.romaji || 'Unknown Title',
+                            type: edge.node.format,
+                            coverImage: edge.node.coverImage
+                        }
+                    ]
+                })) || [];
 
-    // get relations fallback with cache and retry
-    const getRelations = React.useCallback(async(animeId, attempt = 1) => {
-        try {
-            const cacheKey = `anime_relations_${animeId}`;
-            try {
-                const cached = sessionStorage.getItem(cacheKey);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        setRelations(parsed);
-                        setLoadingRelations(false);
-                        return;
-                    }
-                }
-            } catch {}
-
-            const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/relations`);
-            if (response.status === 429 && attempt <= 3) {
-                await new Promise(r => setTimeout(r, 1200 * attempt));
-                return getRelations(animeId, attempt + 1);
-            }
-
-            if (!response.ok) {
-                setLoadingRelations(false);
-                return;
-            }
-
-            const data = await response.json();
-            if (data?.data && Array.isArray(data.data)) {
-                setRelations(data.data);
-                try {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(data.data));
-                } catch {}
-            }
-        } catch (err) {
-            console.error("Error fetching relations:", err);
-        } finally {
-            setLoadingRelations(false);
-        }
-    }, []);
-    
-    // get characters with rate-limit retry and cache
-    const getCharacters = React.useCallback(async(animeId, attempt = 1) => {
-        try {
-            setLoadingChars(true);
-            const cacheKey = `anime_chars_${animeId}`;
-            try {
-                const cached = sessionStorage.getItem(cacheKey);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        setCharacters(parsed);
-                        setLoadingChars(false);
-                        return;
-                    }
-                }
-            } catch {}
-
-            const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/characters`);
-            if (response.status === 429 && attempt <= 3) {
-                console.warn(`[Jikan Rate Limit] Retrying character specs for ${animeId} in 1200ms...`);
-                await new Promise(r => setTimeout(r, 1200 * attempt));
-                return getCharacters(animeId, attempt + 1);
-            }
-
-            if (!response.ok) {
-                setLoadingChars(false);
-                return;
-            }
-
-            const data = await response.json();
-            if (data?.data && Array.isArray(data.data)) {
-                const sorted = [...data.data].sort((a, b) => {
-                    if (a.role === 'Main' && b.role !== 'Main') return -1;
-                    if (a.role !== 'Main' && b.role === 'Main') return 1;
-                    return 0;
+                const initDetails = {};
+                media.relations?.edges?.forEach((edge) => {
+                    initDetails[String(edge.node.id)] = {
+                        image: edge.node.coverImage?.large || edge.node.coverImage?.medium,
+                        score: null,
+                        year: null,
+                        type: edge.node.format,
+                        episodes: null
+                    };
                 });
-                setCharacters(sorted);
+
+                setAnime(norm);
+                setCharacters(formattedChars);
+                setRelations(formattedRelations);
+                setRelatedDetails(initDetails);
+
                 try {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(sorted));
+                    sessionStorage.setItem(
+                        cacheKey,
+                        JSON.stringify({
+                            anime: norm,
+                            characters: formattedChars,
+                            relations: formattedRelations,
+                            relatedDetails: initDetails
+                        })
+                    );
                 } catch {}
             }
         } catch (err) {
-            console.error("Error fetching characters:", err);
+            console.error('[AniList] Error fetching anime details:', err);
         } finally {
+            setLoadingAnime(false);
+            setLoadingRelations(false);
             setLoadingChars(false);
         }
     }, []);
@@ -200,47 +128,13 @@ function AnimeItem() {
         document.body.scrollTop = 0;
 
         setAnime({});
-        setLoadingAnime(true);
         setRelations([]);
-        setLoadingRelations(true);
         setCharacters([]);
-        setLoadingChars(true);
         setShowAllChars(false);
         setShowMore(false);
 
-        let isCancelled = false;
-
-        const loadAnimeSpecs = async () => {
-            const data = await getAnime(id);
-            if (isCancelled) return;
-
-            // Re-assert top scroll position once content has expanded
-            requestAnimationFrame(() => {
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                document.documentElement.scrollTop = 0;
-                document.body.scrollTop = 0;
-            });
-
-            // If /full did not provide relations, fetch them separately
-            const hasRelations = Array.isArray(data?.relations) && data.relations.length > 0;
-            if (!hasRelations) {
-                setTimeout(() => {
-                    if (!isCancelled) getRelations(id);
-                }, 400);
-            }
-
-            // Stagger characters request so it doesn't collide with getAnime
-            setTimeout(() => {
-                if (!isCancelled) getCharacters(id);
-            }, 800);
-        };
-
-        loadAnimeSpecs();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [id, getAnime, getCharacters, getRelations]);
+        loadAnimeSpecs(id);
+    }, [id, loadAnimeSpecs]);
 
     useEffect(() => {
         if (title) {
@@ -473,11 +367,21 @@ function AnimeItem() {
                     <span className="arrow">←</span>
                     <span>DIRECTORY</span>
                 </Link>
-                <div className="nav-telemetry">
-                    <span className="dot" />
-                    <span>SPEC SHEET // ID: {id}</span>
+                <div className="nav-right">
+                    <WatchlistButton anime={anime} variant="full" />
+                    <div className="nav-telemetry">
+                        <span className="dot" />
+                        <span>SPEC SHEET // ID: {id}</span>
+                    </div>
                 </div>
             </div>
+
+            {anime?.bannerImage && (
+                <div className="cinematic-hero-banner">
+                    <img src={anime.bannerImage} alt={title || 'Banner'} />
+                    <div className="banner-overlay" />
+                </div>
+            )}
 
             {loadingAnime && !title ? (
                 <div className="spec-sheet-loading">
@@ -818,8 +722,15 @@ const AnimeItemStyled = styled.div`
             }
         }
 
-        .nav-telemetry {
+        .nav-right {
             display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-telemetry {
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             font-family: ${tokens.fonts.technical};
@@ -835,6 +746,36 @@ const AnimeItemStyled = styled.div`
                 background: ${tokens.colors.accent};
                 box-shadow: ${tokens.shadows.glowOrange};
             }
+        }
+    }
+
+    .cinematic-hero-banner {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        border-radius: ${tokens.radii.lg};
+        overflow: hidden;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 247, 240, 0.85);
+        box-shadow: ${tokens.shadows.card};
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 25%;
+            filter: contrast(1.05) brightness(0.95);
+        }
+
+        .banner-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(20, 24, 33, 0.15) 0%, rgba(20, 24, 33, 0.65) 100%);
+        }
+
+        @media screen and (max-width: 768px) {
+            height: 180px;
+            margin-bottom: 1.5rem;
         }
     }
     

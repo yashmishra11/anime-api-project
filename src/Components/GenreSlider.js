@@ -256,7 +256,7 @@ function GenreSlider() {
                                             <div className="score-pill">
                                                 <span className="star">★</span>
                                                 <span className="val">{slide.score}</span>
-                                                <span className="unit">MAL</span>
+                                                <span className="unit">ANILIST</span>
                                             </div>
 
                                             <div className="stat-pill">
