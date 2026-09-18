@@ -24,7 +24,7 @@ function AnimeCard({ anime }) {
     } = anime;
 
     const targetId = id || mal_id;
-    const imageUrl = coverImage?.large || coverImage?.extraLarge || images?.webp?.large_image_url || images?.jpg?.large_image_url || images?.jpg?.image_url;
+    const imageUrl = coverImage?.extraLarge || images?.webp?.large_image_url || images?.jpg?.large_image_url || coverImage?.large || images?.jpg?.image_url;
     const primaryGenre = genres && genres.length > 0 ? (genres[0].name || genres[0]) : 'ANIME';
     const isAiring = status === 'Currently Airing' || status === 'RELEASING';
     const releaseYear = year || aired?.prop?.from?.year || null;
@@ -131,8 +131,8 @@ const CardStyled = styled(Link)`
             height: 100%;
             object-fit: cover;
             display: block;
+            image-rendering: -webkit-optimize-contrast;
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease;
-            filter: contrast(0.96);
         }
 
         &::after {

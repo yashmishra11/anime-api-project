@@ -35,7 +35,7 @@ function AnimeItem() {
         setLoadingRelations(true);
         setLoadingChars(true);
 
-        const cacheKey = `anime_spec_${animeId}`;
+        const cacheKey = `anime_spec_v2_${animeId}`;
         try {
             const cached = sessionStorage.getItem(cacheKey);
             if (cached) {
@@ -398,8 +398,11 @@ function AnimeItem() {
                         <div className='detail'>
                             <div className='image'>
                                 <div className="image-well">
-                                    {images?.jpg?.large_image_url || images?.jpg?.image_url ? (
-                                        <img src={images?.jpg?.large_image_url || images?.jpg?.image_url} alt={title || "Anime Poster"} />
+                                    {(anime.coverImage?.extraLarge || images?.webp?.large_image_url || images?.jpg?.large_image_url || anime.coverImage?.large) ? (
+                                        <img
+                                            src={anime.coverImage?.extraLarge || images?.webp?.large_image_url || images?.jpg?.large_image_url || anime.coverImage?.large}
+                                            alt={title || "Anime Poster"}
+                                        />
                                     ) : (
                                         <div className="no-specimen-img">// NO VISUAL TRANSMISSION</div>
                                     )}
@@ -895,6 +898,7 @@ const AnimeItemStyled = styled.div`
                         width: 100%;
                         border-radius: ${tokens.radii.md};
                         display: block;
+                        image-rendering: -webkit-optimize-contrast;
                         box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
                     }
                 }

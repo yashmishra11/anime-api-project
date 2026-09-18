@@ -26,17 +26,47 @@ export default function WatchlistFeed() {
 
     const [activeFilter, setActiveFilter] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('DEFAULT');
 
-    // Filter watchlist entries
-    const filteredEntries = useMemo(() => {
-        return watchlistList.filter((entry) => {
+    // Filter and Sort watchlist entries
+    const processedEntries = useMemo(() => {
+        // 1. Filter by status and search query
+        const filtered = watchlistList.filter((entry) => {
             const matchesStatus = activeFilter === 'ALL' || entry.status === activeFilter;
             const matchesSearch =
                 !searchTerm.trim() ||
                 (entry.media?.title && entry.media.title.toLowerCase().includes(searchTerm.toLowerCase()));
             return matchesStatus && matchesSearch;
         });
-    }, [watchlistList, activeFilter, searchTerm]);
+
+        // 2. Sort within current filtered status
+        return [...filtered].sort((a, b) => {
+            const titleA = (a.media?.title || '').toLowerCase();
+            const titleB = (b.media?.title || '').toLowerCase();
+            const epA = Number(a.media?.episodes) || 0;
+            const epB = Number(b.media?.episodes) || 0;
+            const scoreA = Number(a.score > 0 ? a.score : (a.media?.score || 0));
+            const scoreB = Number(b.score > 0 ? b.score : (b.media?.score || 0));
+
+            switch (sortBy) {
+                case 'NAME_ASC':
+                    return titleA.localeCompare(titleB);
+                case 'NAME_DESC':
+                    return titleB.localeCompare(titleA);
+                case 'EPISODES_DESC':
+                    return epB - epA;
+                case 'EPISODES_ASC':
+                    return epA - epB;
+                case 'SCORE_DESC':
+                    return scoreB - scoreA;
+                case 'SCORE_ASC':
+                    return scoreA - scoreB;
+                case 'DEFAULT':
+                default:
+                    return (b.updatedAt || 0) - (a.updatedAt || 0);
+            }
+        });
+    }, [watchlistList, activeFilter, searchTerm, sortBy]);
 
     // Count by status
     const statusCounts = useMemo(() => {
@@ -132,25 +162,46 @@ export default function WatchlistFeed() {
                         })}
                     </div>
 
-                    <div className="inlist-search">
-                        <input
-                            type="text"
-                            placeholder="FILTER SAVED TITLES..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        {searchTerm && (
-                            <button type="button" className="clear-btn" onClick={() => setSearchTerm('')}>
-                                ✕
-                            </button>
-                        )}
+                    <div className="controls-right-group">
+                        <div className="sort-selector-slot">
+                            <span className="sort-icon">⇅</span>
+                            <span className="sort-label">SORT:</span>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="sort-dropdown"
+                                title="Sort transmissions in this section"
+                            >
+                                <option value="DEFAULT">Recently Updated</option>
+                                <option value="NAME_ASC">Name (A → Z)</option>
+                                <option value="NAME_DESC">Name (Z → A)</option>
+                                <option value="EPISODES_DESC">Most Episodes</option>
+                                <option value="EPISODES_ASC">Least Episodes</option>
+                                <option value="SCORE_DESC">Highest Rating</option>
+                                <option value="SCORE_ASC">Lowest Rating</option>
+                            </select>
+                        </div>
+
+                        <div className="inlist-search">
+                            <input
+                                type="text"
+                                placeholder="FILTER SAVED TITLES..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <button type="button" className="clear-btn" onClick={() => setSearchTerm('')}>
+                                    ✕
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Grid of User Anime */}
                 <div className="entries-grid">
-                    {filteredEntries && filteredEntries.length > 0 ? (
-                        filteredEntries.map((entry) => {
+                    {processedEntries && processedEntries.length > 0 ? (
+                        processedEntries.map((entry) => {
                             const animeData = entry.media;
                             if (!animeData) return null;
                             return (
@@ -409,6 +460,61 @@ const WatchlistStyled = styled.div`
                         background: rgba(255, 255, 255, 0.25);
                         color: #ffffff;
                     }
+                }
+            }
+        }
+
+        .controls-right-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+
+            .sort-selector-slot {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                background: #ffffff;
+                border: 1px solid ${tokens.colors.borderDark};
+                border-radius: ${tokens.radii.md};
+                padding: 0.35rem 0.65rem;
+                box-shadow: ${tokens.shadows.sharp};
+                transition: ${tokens.transitions.fast};
+
+                .sort-icon {
+                    font-size: 0.85rem;
+                    color: ${tokens.colors.accent};
+                    font-weight: 800;
+                }
+
+                .sort-label {
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.68rem;
+                    font-weight: 700;
+                    color: ${tokens.colors.textMuted};
+                    letter-spacing: 0.06em;
+                }
+
+                .sort-dropdown {
+                    background: transparent;
+                    border: none;
+                    font-family: ${tokens.fonts.technical};
+                    font-size: 0.76rem;
+                    font-weight: 700;
+                    color: ${tokens.colors.textPrimary};
+                    outline: none;
+                    cursor: pointer;
+
+                    option {
+                        background: #ffffff;
+                        color: ${tokens.colors.textPrimary};
+                        font-weight: 500;
+                    }
+                }
+
+                &:focus-within {
+                    border-color: ${tokens.colors.accent};
+                    box-shadow: 0 0 0 2px rgba(255, 94, 40, 0.15);
                 }
             }
         }

@@ -219,7 +219,7 @@ export const GlobalContextProvider = ({ children }) => {
     // Fetch popular anime from AniList
     const getPopularAnime = useCallback(async () => {
         dispatch({ type: LOADING });
-        const data = await cachedFetch('anilist_popular_feed', async () => {
+        const data = await cachedFetch('anilist_popular_feed_v2', async () => {
             const res = await fetchAniList(POPULAR_ANIME_QUERY, { page: 1, perPage: 24 });
             const mediaList = res?.Page?.media || [];
             return mediaList.map(normalizeAniListMedia);
@@ -234,7 +234,7 @@ export const GlobalContextProvider = ({ children }) => {
     // Fetch upcoming anime from AniList
     const getUpcomingAnime = useCallback(async () => {
         dispatch({ type: LOADING });
-        const data = await cachedFetch('anilist_upcoming_feed', async () => {
+        const data = await cachedFetch('anilist_upcoming_feed_v2', async () => {
             const res = await fetchAniList(UPCOMING_ANIME_QUERY, { page: 1, perPage: 24 });
             const mediaList = res?.Page?.media || [];
             return mediaList.map(normalizeAniListMedia);
@@ -249,7 +249,7 @@ export const GlobalContextProvider = ({ children }) => {
     // Fetch airing anime from AniList
     const getAiringAnime = useCallback(async () => {
         dispatch({ type: LOADING });
-        const data = await cachedFetch('anilist_airing_feed', async () => {
+        const data = await cachedFetch('anilist_airing_feed_v2', async () => {
             const res = await fetchAniList(AIRING_ANIME_QUERY, { page: 1, perPage: 24 });
             const mediaList = res?.Page?.media || [];
             return mediaList.map(normalizeAniListMedia);

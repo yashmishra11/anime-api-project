@@ -23,7 +23,7 @@ function Sidebar() {
             <div className='anime'>
                 {sorted.slice(0, 5).map((anime, index) => {
                     const targetId = anime.id || anime.mal_id;
-                    const posterUrl = anime.coverImage?.large || anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url;
+                    const posterUrl = anime.coverImage?.extraLarge || anime.coverImage?.large || anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url;
                     return (
                         <Link to={`/anime/${targetId}`} key={targetId}>
                             <div className="img-slot">
@@ -172,8 +172,8 @@ const SidebarStyled = styled.aside`
                     height: 100%;
                     object-fit: cover;
                     border-radius: inherit;
+                    image-rendering: -webkit-optimize-contrast;
                     transition: transform 0.3s ease, filter 0.3s ease;
-                    filter: contrast(0.96);
                 }
 
                 .rank-badge {
