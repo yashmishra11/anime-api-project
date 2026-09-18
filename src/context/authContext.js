@@ -139,17 +139,78 @@ export const AuthProvider = ({ children }) => {
         }
     }, [token, loadUserData]);
 
-    // 4. OAuth Login action
+    // Listen for postMessage from authentication popup
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.origin !== window.location.origin) return;
+            if (event.data && event.data.type === 'ANILIST_AUTH_SUCCESS' && event.data.token) {
+                const receivedToken = event.data.token;
+                localStorage.setItem(STORAGE_TOKEN_KEY, receivedToken);
+                setToken(receivedToken);
+                loadUserData(receivedToken);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [loadUserData]);
+
+    // 4. OAuth Login action (Opens centered popup window)
     const login = () => {
         if (!clientId) {
             setIsConfigModalOpen(true);
             return;
         }
 
-        // Implicit grant redirect: AniList redirects back to current origin with #access_token=...
-        const redirectUri = window.location.origin;
         const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${clientId}&response_type=token`;
-        window.location.href = authUrl;
+
+        // Dimensions for centered OAuth popup dialog
+        const width = 620;
+        const height = 760;
+        const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2);
+        const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2);
+
+        const popup = window.open(
+            authUrl,
+            'anilist_oauth_dialog',
+            `width=${width},height=${height},left=${left},top=${top},status=0,toolbar=0,location=0,menubar=0,directories=0,resizable=1,scrollbars=1`
+        );
+
+        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+            // Popup blocker prevented opening, fall back to standard redirect
+            console.warn('[AniList Auth] Popup blocked by browser, falling back to page redirect');
+            window.location.href = authUrl;
+            return;
+        }
+
+        popup.focus();
+
+        // Polling fallback to catch redirect token if postMessage is delayed or blocked
+        const pollTimer = setInterval(() => {
+            try {
+                if (popup.closed) {
+                    clearInterval(pollTimer);
+                    return;
+                }
+
+                if (popup.location && popup.location.origin === window.location.origin) {
+                    const hash = popup.location.hash ? popup.location.hash.substring(1) : '';
+                    if (hash) {
+                        const params = new URLSearchParams(hash);
+                        const hashToken = params.get('access_token');
+                        if (hashToken) {
+                            clearInterval(pollTimer);
+                            popup.close();
+                            localStorage.setItem(STORAGE_TOKEN_KEY, hashToken);
+                            setToken(hashToken);
+                            loadUserData(hashToken);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Cross-origin restriction while on anilist.co is expected and harmless
+            }
+        }, 300);
     };
 
     // 5. Logout action

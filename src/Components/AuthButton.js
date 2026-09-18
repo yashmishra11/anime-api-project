@@ -181,7 +181,7 @@ export default function AuthButton({ onOpenWatchlist }) {
                         <div className="modal-content">
                             <h3>Connect Your Free AniList Client</h3>
                             <p className="description">
-                                AniList uses free OAuth2 implicit authentication. To sign in and manage your watchlists:
+                                Connect securely via an AniList authorization popup. Your credentials are never seen or stored by this station.
                             </p>
 
                             <ol className="setup-steps">
