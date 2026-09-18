@@ -41,7 +41,7 @@ function AnimeCard({ anime }) {
                         <div className="type-badge">
                             {isAiring && <span className="status-dot" title="Currently Airing" />}
                             <span>{type || 'TV'}</span>
-                            {episodes && <span className="ep-count">{episodes}E</span>}
+                            {episodes && <span className="ep-count">{episodes}{anime.isOngoing ? '+' : ''}E</span>}
                         </div>
 
                         {score ? (

@@ -43,8 +43,28 @@ export default function WatchlistFeed() {
         return [...filtered].sort((a, b) => {
             const titleA = (a.media?.title || '').toLowerCase();
             const titleB = (b.media?.title || '').toLowerCase();
-            const epA = Number(a.media?.episodes) || 0;
-            const epB = Number(b.media?.episodes) || 0;
+
+            // Resolve effective episodes for an entry
+            const getEffectiveEpisodes = (entry) => {
+                // 1. Explicit episodes count from media
+                if (typeof entry.media?.episodes === 'number' && entry.media.episodes > 0) {
+                    return entry.media.episodes;
+                }
+                // 2. If ongoing, check nextAiringEpisode from raw
+                const nextEp = entry.media?.raw?.nextAiringEpisode?.episode;
+                if (typeof nextEp === 'number' && nextEp > 1) {
+                    return nextEp - 1;
+                }
+                // 3. Fallback to user logged progress if positive
+                if (typeof entry.progress === 'number' && entry.progress > 0) {
+                    return entry.progress;
+                }
+                return null;
+            };
+
+            const epA = getEffectiveEpisodes(a);
+            const epB = getEffectiveEpisodes(b);
+
             const scoreA = Number(a.score > 0 ? a.score : (a.media?.score || 0));
             const scoreB = Number(b.score > 0 ? b.score : (b.media?.score || 0));
 
@@ -53,14 +73,31 @@ export default function WatchlistFeed() {
                     return titleA.localeCompare(titleB);
                 case 'NAME_DESC':
                     return titleB.localeCompare(titleA);
-                case 'EPISODES_DESC':
-                    return epB - epA;
-                case 'EPISODES_ASC':
-                    return epA - epB;
-                case 'SCORE_DESC':
-                    return scoreB - scoreA;
-                case 'SCORE_ASC':
-                    return scoreA - scoreB;
+                case 'EPISODES_DESC': {
+                    const valA = epA ?? 0;
+                    const valB = epB ?? 0;
+                    if (valB !== valA) return valB - valA;
+                    return titleA.localeCompare(titleB);
+                }
+                case 'EPISODES_ASC': {
+                    // Least episodes first (1-ep movies, 2-ep specials, 12-ep seasons, etc.).
+                    // Anime with completely unknown/null episode count evaluate to Infinity so they don't jump ahead of 1-episode anime.
+                    const valA = epA ?? Infinity;
+                    const valB = epB ?? Infinity;
+                    if (valA !== valB) return valA - valB;
+                    return titleA.localeCompare(titleB);
+                }
+                case 'SCORE_DESC': {
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    return titleA.localeCompare(titleB);
+                }
+                case 'SCORE_ASC': {
+                    // Lowest rated first; unrated (score <= 0) pushed to the bottom so they don't pollute lowest score
+                    const valA = scoreA > 0 ? scoreA : Infinity;
+                    const valB = scoreB > 0 ? scoreB : Infinity;
+                    if (valA !== valB) return valA - valB;
+                    return titleA.localeCompare(titleB);
+                }
                 case 'DEFAULT':
                 default:
                     return (b.updatedAt || 0) - (a.updatedAt || 0);

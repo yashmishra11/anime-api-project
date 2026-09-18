@@ -1,6 +1,56 @@
 // AniList GraphQL API Client and Media Normalizer
 const ANILIST_API_URL = "https://graphql.anilist.co";
 
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * Format AniList fuzzy date { year, month, day } to readable date string
+ */
+export function formatAniListDate(dateObj) {
+    if (!dateObj || !dateObj.year) return null;
+    const { year, month, day } = dateObj;
+    if (month && day) {
+        return `${MONTH_NAMES[month - 1]} ${day}, ${year}`;
+    }
+    if (month) {
+        return `${MONTH_NAMES[month - 1]} ${year}`;
+    }
+    return `${year}`;
+}
+
+/**
+ * Format start and end dates into an aired range e.g. "Oct 20, 1999 to Present"
+ */
+export function formatAiredRange(startDate, endDate, status) {
+    const startStr = formatAniListDate(startDate);
+    const endStr = formatAniListDate(endDate);
+
+    if (startStr && endStr) {
+        return startStr === endStr ? startStr : `${startStr} to ${endStr}`;
+    }
+    if (startStr && !endStr) {
+        if (status === "RELEASING") return `${startStr} to Present`;
+        return startStr;
+    }
+    if (!startStr && endStr) return `Until ${endStr}`;
+    return null;
+}
+
+/**
+ * Derive clean content/age advisory rating from adult flag and genres
+ */
+export function deriveContentRating(media) {
+    if (!media) return 'PG-13 - Teens 13+';
+    if (media.isAdult) return 'R - 18+ (Adult)';
+    const genres = Array.isArray(media.genres)
+        ? media.genres.map(g => (typeof g === 'string' ? g : g?.name || ''))
+        : [];
+    if (genres.includes('Kids')) return 'G - All Ages';
+    if (genres.includes('Ecchi') || genres.includes('Harem')) return 'PG-13 - Teens 13+';
+    if (genres.includes('Horror') || genres.includes('Psychological')) return 'R - 17+ (Violence)';
+    return 'PG-13 - Teens 13+';
+}
+
 /**
  * Execute a GraphQL query against AniList API
  */
@@ -49,6 +99,15 @@ export function normalizeAniListMedia(media) {
     // Format release year
     const yearVal = media.seasonYear || media.startDate?.year || null;
 
+    // Episode counting:
+    // Ongoing anime (like One Piece) have media.episodes = null in AniList.
+    // nextAiringEpisode.episode - 1 gives the current released episode count (e.g. 1122+).
+    const currentAiredEpisode = media.nextAiringEpisode?.episode
+        ? media.nextAiringEpisode.episode - 1
+        : null;
+    const totalEpisodes = media.episodes || currentAiredEpisode || null;
+    const isOngoing = (media.status === "RELEASING" && !media.episodes) || (!media.episodes && !!currentAiredEpisode);
+
     // Format human-readable status
     let statusText = "Finished Airing";
     if (media.status === "RELEASING") statusText = "Currently Airing";
@@ -70,6 +129,39 @@ export function normalizeAniListMedia(media) {
     const trailerEmbed = media.trailer?.site === "youtube"
         ? { embed_url: `https://www.youtube-nocookie.com/embed/${media.trailer.id}` }
         : null;
+
+    // Aired date range string
+    const airedString = formatAiredRange(media.startDate, media.endDate, media.status) || (yearVal ? String(yearVal) : null);
+
+    // Content Rating
+    const ratingStr = deriveContentRating(media);
+
+    // Ranking (extract all-time rated rank)
+    const ratedRankObj = Array.isArray(media.rankings)
+        ? (media.rankings.find(r => r.type === "RATED" && r.allTime) || media.rankings.find(r => r.type === "RATED") || media.rankings[0])
+        : null;
+    const rankVal = ratedRankObj?.rank || null;
+
+    // Popularity rank (extract all-time popular rank)
+    const popularRankObj = Array.isArray(media.rankings)
+        ? (media.rankings.find(r => r.type === "POPULAR" && r.allTime) || media.rankings.find(r => r.type === "POPULAR"))
+        : null;
+    const popularityVal = popularRankObj?.rank || null;
+
+    // Scored By (sum of distribution of users who rated this anime)
+    const scoredByVal = Array.isArray(media.stats?.scoreDistribution)
+        ? media.stats.scoreDistribution.reduce((acc, curr) => acc + (curr.amount || 0), 0)
+        : null;
+
+    // Primary Studio
+    const studioList = media.studios?.nodes || [];
+    const mainStudio = studioList[0]?.name || null;
+
+    // Season string with year if available
+    let seasonStr = media.season || null;
+    if (seasonStr && yearVal) {
+        seasonStr = `${seasonStr} ${yearVal}`;
+    }
 
     return {
         // Native AniList properties
@@ -95,7 +187,9 @@ export function normalizeAniListMedia(media) {
         score: scoreVal,
         averageScore: media.averageScore,
         type: media.format || "TV",
-        episodes: media.episodes || null,
+        episodes: totalEpisodes,
+        currentAiredEpisode,
+        isOngoing,
         duration: media.duration ? `${media.duration} min` : null,
         status: statusText,
         rawStatus: media.status,
@@ -103,9 +197,17 @@ export function normalizeAniListMedia(media) {
         genres: genreArray,
         synopsis: cleanSynopsis,
         trailer: trailerEmbed,
-        season: media.season || null,
+        season: seasonStr,
         source: media.source || null,
-        studios: media.studios?.nodes || [],
+        studio: mainStudio,
+        studios: studioList,
+        aired: { string: airedString },
+        airedString,
+        rating: ratingStr,
+        rank: rankVal,
+        popularity: popularityVal,
+        members: media.popularity || null,
+        scored_by: scoredByVal,
         mediaListEntry: media.mediaListEntry || null,
         raw: media
     };
@@ -138,10 +240,15 @@ query ($page: Int = 1, $perPage: Int = 24) {
       averageScore
       format
       episodes
+      nextAiringEpisode {
+        episode
+      }
       status
       seasonYear
       startDate {
         year
+        month
+        day
       }
       genres
       description(asHtml: false)
@@ -179,10 +286,15 @@ query ($page: Int = 1, $perPage: Int = 24) {
       averageScore
       format
       episodes
+      nextAiringEpisode {
+        episode
+      }
       status
       seasonYear
       startDate {
         year
+        month
+        day
       }
       genres
       description(asHtml: false)
@@ -220,10 +332,15 @@ query ($page: Int = 1, $perPage: Int = 24) {
       averageScore
       format
       episodes
+      nextAiringEpisode {
+        episode
+      }
       status
       seasonYear
       startDate {
         year
+        month
+        day
       }
       genres
       description(asHtml: false)
@@ -261,10 +378,15 @@ query ($search: String, $page: Int = 1, $perPage: Int = 24) {
       averageScore
       format
       episodes
+      nextAiringEpisode {
+        episode
+      }
       status
       seasonYear
       startDate {
         year
+        month
+        day
       }
       genres
       description(asHtml: false)
@@ -298,15 +420,52 @@ query ($id: Int) {
     meanScore
     format
     episodes
+    nextAiringEpisode {
+      episode
+      airingAt
+    }
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      year
+      month
+      day
+    }
     duration
     status
     season
     seasonYear
     source
+    isAdult
+    popularity
+    rankings {
+      id
+      rank
+      type
+      format
+      year
+      season
+      allTime
+      context
+    }
+    stats {
+      scoreDistribution {
+        score
+        amount
+      }
+      statusDistribution {
+        status
+        amount
+      }
+    }
     studios(isMain: true) {
       nodes {
         id
         name
+        isAnimationStudio
       }
     }
     genres
@@ -448,8 +607,16 @@ query ($userId: Int) {
           averageScore
           format
           episodes
+          nextAiringEpisode {
+            episode
+          }
           status
           seasonYear
+          startDate {
+            year
+            month
+            day
+          }
           genres
           description(asHtml: false)
         }

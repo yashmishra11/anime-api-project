@@ -24,9 +24,10 @@ function AnimeItem() {
     // destructure anime
     const {
         title, synopsis, trailer,
-        duration, aired, season,
+        duration, aired, airedString, season,
         images, rank, score, scored_by,
-        popularity, status, rating, source
+        popularity, members, status, rating, source,
+        episodes, isOngoing, studio, studios
     } = anime;
 
     // Load anime specs from AniList GraphQL in a single request
@@ -35,12 +36,13 @@ function AnimeItem() {
         setLoadingRelations(true);
         setLoadingChars(true);
 
-        const cacheKey = `anime_spec_v2_${animeId}`;
+        const cacheKey = `anime_spec_v4_${animeId}`;
         try {
             const cached = sessionStorage.getItem(cacheKey);
             if (cached) {
                 const parsed = JSON.parse(cached);
-                if (parsed && parsed.anime) {
+                // Validate that cache has the newly enriched telemetry
+                if (parsed && parsed.anime && (parsed.anime.airedString || parsed.anime.aired?.string)) {
                     setAnime(parsed.anime);
                     setCharacters(parsed.characters || []);
                     setRelations(parsed.relations || []);
@@ -409,13 +411,15 @@ function AnimeItem() {
                                 </div>
                             </div>
                             <div className='anime-details'>
-                                <p><span>AIRED:</span><span>{aired?.string || 'N/A'}</span></p>
+                                <p><span>AIRED:</span><span>{aired?.string || airedString || (anime.year ? String(anime.year) : 'N/A')}</span></p>
+                                <p><span>EPISODES:</span><span className="highlight-tag">{episodes ? `${episodes}${isOngoing ? '+' : ''}` : 'N/A'}</span></p>
                                 <p><span>RATING:</span><span>{rating || 'N/A'}</span></p>
-                                <p><span>RANK:</span><span className="highlight-tag">#{rank || 'N/A'}</span></p>
+                                <p><span>RANK:</span><span className="highlight-tag">{rank ? `#${rank}` : 'N/A'}</span></p>
                                 <p><span>SCORE:</span><span className="highlight-score">{score || 'N/A'}</span></p>
-                                <p><span>SCORED BY:</span><span>{scored_by?.toLocaleString() || 'N/A'}</span></p>
-                                <p><span>POPULARITY:</span><span>#{popularity || 'N/A'}</span></p>
+                                <p><span>SCORED BY:</span><span>{scored_by ? scored_by.toLocaleString() : 'N/A'}</span></p>
+                                <p><span>POPULARITY:</span><span>{popularity ? `#${popularity}` : (members ? `#${members.toLocaleString()}` : 'N/A')}</span></p>
                                 <p><span>STATUS:</span><span>{status || 'N/A'}</span></p>
+                                <p><span>STUDIO:</span><span>{studio || (studios && studios[0]?.name) || 'N/A'}</span></p>
                                 <p><span>SOURCE:</span><span>{source || 'N/A'}</span></p>
                                 <p><span>SEASON:</span><span>{season || 'N/A'}</span></p>
                                 <p><span>DURATION:</span><span>{duration || 'N/A'}</span></p>
