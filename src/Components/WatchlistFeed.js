@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../context/authContext';
 import AnimeCard from './AnimeCard';
-import Sidebar from './Sidebar';
 import { tokens } from '../theme/tokens';
 
 const STATUS_FILTERS = [
@@ -77,7 +76,6 @@ export default function WatchlistFeed() {
                         </div>
                     </div>
                 </div>
-                <Sidebar />
             </WatchlistStyled>
         );
     }
@@ -184,19 +182,16 @@ export default function WatchlistFeed() {
                     )}
                 </div>
             </div>
-            <Sidebar />
         </WatchlistStyled>
     );
 }
 
 const WatchlistStyled = styled.div`
-    display: flex;
-    gap: 1.5rem;
-    padding-bottom: 3rem;
+    width: min(94%, 1380px);
+    margin: 1.5rem auto 3rem auto;
 
     .watchlist-content {
-        flex: 1;
-        min-width: 0;
+        width: 100%;
     }
 
     /* Auth Gate Banner */
@@ -463,7 +458,24 @@ const WatchlistStyled = styled.div`
     .entries-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 1.5rem;
+        gap: 1.75rem;
+        padding: 2rem 2.25rem;
+        background: ${tokens.colors.chassis};
+        border-radius: ${tokens.radii.xl};
+        box-shadow: ${tokens.shadows.recessed};
+        border: 1px solid rgba(255, 247, 240, 0.7);
+
+        @media screen and (max-width: 1024px) {
+            padding: 1.5rem 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+
+        @media screen and (max-width: 640px) {
+            padding: 1rem 0.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
     }
 
     .empty-state-terminal {
@@ -526,7 +538,5 @@ const WatchlistStyled = styled.div`
         to { transform: rotate(360deg); }
     }
 
-    @media screen and (max-width: 1024px) {
-        flex-direction: column;
-    }
+
 `;
