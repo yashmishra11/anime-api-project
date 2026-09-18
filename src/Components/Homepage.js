@@ -15,6 +15,8 @@ function Homepage() {
         handleSubmit, 
         search,
         handleChange,
+        clearSearch,
+        getPopularAnime,
         getUpcomingAnime,
         getAiringAnime,
         isSearch,
@@ -64,7 +66,7 @@ function Homepage() {
                     <div className='brand-slot'>
                         <span className='brand-icon'>❖</span>
                         <h1 className='main-brand'>ANILOG</h1>
-                        <span className='brand-sep'>//</span>
+                        <span className='brand-sep'>{"//"}</span>
                         <span className='feed-indicator'>
                             {isSearch && search
                                 ? `SEARCH: "${search.toUpperCase()}"`
@@ -92,7 +94,11 @@ function Homepage() {
                     <div className='filter-btn-popular-filter'>
                         <button 
                             className={rendered === 'popular' ? 'active-key' : ''}
-                            onClick={() => setRendered('popular')}
+                            onClick={() => {
+                                setRendered('popular');
+                                clearSearch();
+                                getPopularAnime();
+                            }}
                         >
                             <span className="key-indicator" />
                             Popular
@@ -116,6 +122,7 @@ function Homepage() {
                             className={rendered === 'airing' ? 'active-key' : ''}
                             onClick={() => {
                                 setRendered('airing');
+                                clearSearch();
                                 getAiringAnime();
                             }}
                         >
@@ -129,6 +136,7 @@ function Homepage() {
                             className={rendered === 'upcoming' ? 'active-key' : ''}
                             onClick={() => { 
                                 setRendered('upcoming');
+                                clearSearch();
                                 getUpcomingAnime();
                             }}
                         >
@@ -140,7 +148,10 @@ function Homepage() {
                     <div className='filter-btn-watchlist-filter'>
                         <button 
                             className={rendered === 'watchlist' ? 'active-key' : ''}
-                            onClick={() => setRendered('watchlist')}
+                            onClick={() => {
+                                setRendered('watchlist');
+                                clearSearch();
+                            }}
                         >
                             <span className="key-indicator" />
                             Watchlist
@@ -150,7 +161,10 @@ function Homepage() {
                     <div className='filter-btn-cinemation-filter'>
                         <button 
                             className={rendered === 'cinemation' ? 'active-key' : ''}
-                            onClick={() => setRendered('cinemation')}
+                            onClick={() => {
+                                setRendered('cinemation');
+                                clearSearch();
+                            }}
                             title="Ambient anime landscapes & chill scenery slideshow"
                         >
                             <span className="key-indicator" />

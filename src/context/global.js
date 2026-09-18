@@ -23,7 +23,7 @@ const GET_PICTURES = "GET_PICTURES";
 const FALLBACK_POPULAR_ANIME = [
     {
         id: 154587,
-        mal_id: 52991,
+        mal_id: 154587,
         title: "Frieren: Beyond Journey's End",
         title_english: "Frieren: Beyond Journey's End",
         title_romaji: "Sousou no Frieren",
@@ -77,7 +77,7 @@ const FALLBACK_POPULAR_ANIME = [
     },
     {
         id: 101922,
-        mal_id: 38000,
+        mal_id: 101922,
         title: "Demon Slayer: Kimetsu no Yaiba",
         title_english: "Demon Slayer: Kimetsu no Yaiba",
         title_romaji: "Kimetsu no Yaiba",
@@ -95,7 +95,7 @@ const FALLBACK_POPULAR_ANIME = [
     },
     {
         id: 113415,
-        mal_id: 40748,
+        mal_id: 113415,
         title: "JUJUTSU KAISEN",
         title_english: "JUJUTSU KAISEN",
         title_romaji: "Jujutsu Kaisen",
@@ -276,6 +276,12 @@ export const GlobalContextProvider = ({ children }) => {
         }
     }, []);
 
+    // Clear search
+    const clearSearch = useCallback(() => {
+        setSearch('');
+        dispatch({ type: CLEAR_SEARCH });
+    }, []);
+
     // Get pictures compatibility
     const getAnimePictures = useCallback(async (id) => {
         dispatch({ type: LOADING });
@@ -296,6 +302,7 @@ export const GlobalContextProvider = ({ children }) => {
             ...state,
             handleChange,
             handleSubmit,
+            clearSearch,
             searchAnime,
             search,
             getPopularAnime,

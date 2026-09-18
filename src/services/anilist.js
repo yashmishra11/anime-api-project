@@ -87,17 +87,28 @@ export async function fetchAniList(query, variables = {}, token = null) {
  */
 export function normalizeAniListMedia(media) {
     if (!media) return null;
+    if (media._isNormalized) return media;
 
-    const titleStr = media.title?.english || media.title?.romaji || media.title?.native || "Untitled";
-    const coverUrl = media.coverImage?.extraLarge || media.coverImage?.large || media.coverImage?.medium || "";
+    const titleStr = typeof media.title === "string"
+        ? media.title
+        : (media.title?.english || media.title?.romaji || media.title?.native || "Untitled");
+    const coverUrl = media.coverImage?.extraLarge ||
+        media.coverImage?.large ||
+        media.coverImage?.medium ||
+        media.images?.webp?.large_image_url ||
+        media.images?.jpg?.large_image_url ||
+        media.images?.jpg?.image_url ||
+        "";
 
     // Convert AniList 0-100 score to 0-10 format for backwards compatibility with score badges
-    const scoreVal = media.averageScore
-        ? Number((media.averageScore / 10).toFixed(1))
-        : (media.meanScore ? Number((media.meanScore / 10).toFixed(1)) : null);
+    const scoreVal = typeof media.score === "number" && media.score <= 10
+        ? media.score
+        : (media.averageScore
+            ? Number((media.averageScore / 10).toFixed(1))
+            : (media.meanScore ? Number((media.meanScore / 10).toFixed(1)) : null));
 
     // Format release year
-    const yearVal = media.seasonYear || media.startDate?.year || null;
+    const yearVal = media.seasonYear || media.year || media.startDate?.year || null;
 
     // Episode counting:
     // Ongoing anime (like One Piece) have media.episodes = null in AniList.
@@ -110,14 +121,14 @@ export function normalizeAniListMedia(media) {
 
     // Format human-readable status
     let statusText = "Finished Airing";
-    if (media.status === "RELEASING") statusText = "Currently Airing";
-    else if (media.status === "NOT_YET_RELEASED") statusText = "Not Yet Aired";
+    if (media.status === "RELEASING" || media.status === "Currently Airing") statusText = "Currently Airing";
+    else if (media.status === "NOT_YET_RELEASED" || media.status === "Not Yet Aired") statusText = "Not Yet Aired";
     else if (media.status === "CANCELLED") statusText = "Cancelled";
     else if (media.status === "HIATUS") statusText = "On Hiatus";
 
     // Clean description HTML tags if any remain
-    const cleanSynopsis = media.description
-        ? media.description.replace(/<[^>]*>?/gm, "").replace(/&quot;/g, '"').replace(/&#039;/g, "'")
+    const cleanSynopsis = media.description || media.synopsis
+        ? String(media.description || media.synopsis).replace(/<[^>]*>?/gm, "").replace(/&quot;/g, '"').replace(/&#039;/g, "'")
         : "";
 
     // Adapt genres to { name } array for existing components
@@ -128,7 +139,9 @@ export function normalizeAniListMedia(media) {
     // Format trailer URL if available
     const trailerEmbed = media.trailer?.site === "youtube"
         ? { embed_url: `https://www.youtube-nocookie.com/embed/${media.trailer.id}` }
-        : null;
+        : (media.trailer?.site === "dailymotion"
+            ? { embed_url: `https://www.dailymotion.com/embed/video/${media.trailer.id}` }
+            : (media.trailer?.embed_url ? { embed_url: media.trailer.embed_url } : null));
 
     // Aired date range string
     const airedString = formatAiredRange(media.startDate, media.endDate, media.status) || (yearVal ? String(yearVal) : null);
@@ -209,6 +222,7 @@ export function normalizeAniListMedia(media) {
         members: media.popularity || null,
         scored_by: scoredByVal,
         mediaListEntry: media.mediaListEntry || null,
+        _isNormalized: true,
         raw: media
     };
 }
@@ -496,12 +510,16 @@ query ($id: Int) {
         node {
           id
           idMal
+          type
           title {
             english
             romaji
           }
           format
           status
+          seasonYear
+          averageScore
+          episodes
           coverImage {
             large
             medium
@@ -540,6 +558,7 @@ query ($id: Int) {
       day
     }
     age
+    favourites
     media(type: ANIME, sort: POPULARITY_DESC, perPage: 12) {
       nodes {
         id

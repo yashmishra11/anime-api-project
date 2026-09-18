@@ -9,107 +9,107 @@ const WEEKLY_TOP_FALLBACK = [
     {
         rank: 1,
         badgeLabel: "WEEK'S TOP #1 // APEX BROADCAST",
-        mal_id: 52991,
+        mal_id: 154587,
         title: 'Sousou no Frieren',
         title_english: "Frieren: Beyond Journey's End",
-        score: 9.26,
+        score: 9.3,
         type: 'TV',
         episodes: 28,
         year: 2023,
         status: 'Currently Airing',
         genres: [{ name: 'Fantasy' }, { name: 'Adventure' }],
         synopsis: 'During their decade-long quest to defeat the Demon King, the hero party forged unforgettable memories. After the victory, the elven mage Frieren embarks on a personal journey to understand humans and the fleeting nature of time.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1015/138006l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-573TGNQhA1p1.jpg'
     },
     {
         rank: 2,
         badgeLabel: "WEEK'S TOP #2 // APEX BROADCAST",
-        mal_id: 41457,
+        mal_id: 114446,
         title: 'Bleach: Sennen Kessen-hen',
         title_english: 'Bleach: Thousand-Year Blood War',
-        score: 8.98,
+        score: 9.0,
         type: 'TV',
         episodes: 13,
         year: 2022,
         status: 'Currently Airing',
         genres: [{ name: 'Action' }, { name: 'Adventure' }, { name: 'Fantasy' }],
         synopsis: 'The peace is suddenly broken when warning sirens blare through the Soul Society. A shadow enemy emerges as the Wandenreich, an empire of Quincies led by Yhwach, declares war against all Soul Reapers.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1764/126627l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114446-0j8V9k1p.jpg'
     },
     {
         rank: 3,
         badgeLabel: "WEEK'S TOP #3 // TOP RATED",
-        mal_id: 52701,
+        mal_id: 153518,
         title: 'Dungeon Meshi',
         title_english: 'Delicious in Dungeon',
-        score: 8.65,
+        score: 8.7,
         type: 'TV',
         episodes: 24,
         year: 2024,
         status: 'Currently Airing',
         genres: [{ name: 'Fantasy' }, { name: 'Comedy' }, { name: 'Adventure' }],
         synopsis: 'After his sister is devoured by a red dragon deep in an uncharted dungeon, knight Laios and his surviving companions venture back underground, sustaining themselves by turning fierce monsters into gourmet meals.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1460/141010l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx153518-zX5s13c8p2V0.jpg'
     },
     {
         rank: 4,
         badgeLabel: "WEEK'S TOP #4 // TOP RATED",
-        mal_id: 55701,
+        mal_id: 166240,
         title: 'Kimetsu no Yaiba: Hashira Geiko-hen',
         title_english: 'Demon Slayer: Hashira Training Arc',
-        score: 8.47,
+        score: 8.5,
         type: 'TV',
         episodes: 8,
         year: 2024,
         status: 'Currently Airing',
         genres: [{ name: 'Action' }, { name: 'Fantasy' }],
         synopsis: 'Tanjiro visits the Stone Hashira, Himejima, who intends to prepare him for the looming climactic war against Muzan Kibutsuji. Meanwhile, the Demon Slayer Corps initiates rigorous Hashira-led training camps.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166240-aE0qj6p5Wn0k.jpg'
     },
     {
         rank: 5,
         badgeLabel: "WEEK'S TOP #5 // TOP RATED",
-        mal_id: 55791,
+        mal_id: 166531,
         title: 'Oshi no Ko Season 2',
         title_english: '【OSHI NO KO】Season 2',
-        score: 8.42,
+        score: 8.4,
         type: 'TV',
         episodes: 13,
         year: 2024,
         status: 'Currently Airing',
         genres: [{ name: 'Drama' }, { name: 'Suspense' }],
         synopsis: 'The 2.5D stage play adaptation of the hit manga Tokyo Blade commences, putting Aqua Hoshino, Akane Kurokawa, and Kana Arima on stage under intense artistic rivalries and uncovering deeper secrets of the entertainment underworld.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1105/143521l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166531-h0QpZ7kM5j11.jpg'
     },
     {
         rank: 6,
         badgeLabel: "WEEK'S TOP #6 // TOP RATED",
-        mal_id: 54789,
+        mal_id: 158567,
         title: 'Boku no Hero Academia 7th Season',
         title_english: 'My Hero Academia Season 7',
-        score: 8.35,
+        score: 8.4,
         type: 'TV',
         episodes: 21,
         year: 2024,
         status: 'Currently Airing',
         genres: [{ name: 'Action' }, { name: 'Sci-Fi' }],
         synopsis: 'With society on the brink of collapse, international hero Star and Stripe arrives in Japan to clash with the all-powerful All For One, while Deku and Class 1-A prepare for their final, all-out war.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1418/142168l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx158567-VwP5kH89a42K.jpg'
     },
     {
         rank: 7,
         badgeLabel: "WEEK'S TOP #7 // TOP RATED",
-        mal_id: 52588,
+        mal_id: 153288,
         title: 'Kaiju No. 8',
         title_english: 'Kaiju No. 8',
-        score: 8.28,
+        score: 8.3,
         type: 'TV',
         episodes: 12,
         year: 2024,
         status: 'Currently Airing',
         genres: [{ name: 'Action' }, { name: 'Sci-Fi' }],
         synopsis: 'In a monster-ravaged Japan, 32-year-old cleanup worker Kafka Hibino suddenly gains the uncanny ability to transform into a devastating humanoid kaiju, taking one last shot at enlisting in the defense force.',
-        imageUrl: 'https://cdn.myanimelist.net/images/anime/1769/141829l.jpg'
+        imageUrl: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx153288-n9KqL8wT3a4o.jpg'
     }
 ];
 
@@ -193,7 +193,7 @@ function GenreSlider() {
                 <div className="telemetry-status">
                     <span className="telemetry-led" />
                     <span className="telemetry-label">
-                        // WEEKLY BROADCAST TELEMETRY: THIS WEEK'S TOP RATED ANIME
+                        {"// WEEKLY BROADCAST TELEMETRY: THIS WEEK'S TOP RATED ANIME"}
                     </span>
                 </div>
 

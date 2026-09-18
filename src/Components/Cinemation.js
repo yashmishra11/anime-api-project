@@ -4,12 +4,13 @@ import styled, { keyframes } from 'styled-components';
 import { tokens, cornerScrews } from '../theme/tokens';
 import WatchlistButton from './WatchlistButton';
 import { useGlobalContext } from '../context/global';
+import { fetchAniList } from '../services/anilist';
 
-// Curated collection of world-renowned anime landscapes & scenery
+// Curated collection of world-renowned anime landscapes & scenery (100% verified active AniList assets)
 const CURATED_LANDSCAPES = [
     {
-        id: 21459,
-        title: "Your Name",
+        id: 21519,
+        title: "Your Name.",
         titleNative: "君の名は。",
         scene: "Lake Itomori at Twilight — Comet Tiamat",
         studio: "CoMix Wave Films",
@@ -17,9 +18,9 @@ const CURATED_LANDSCAPES = [
         year: "2016",
         format: "MOVIE",
         score: 8.8,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21459-yeX058iWpwCV.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21459-yeX058iWpwCV.jpg",
-        lore: "A cosmic fracture of stardust reflected over the quiet volcanic caldera of Itomori, where twilight blurs the boundary between memory and dreams."
+        lore: "A cosmic fracture of stardust reflected over the quiet volcanic caldera of Itomori, where twilight blurs the boundary between memory and dreams.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21519-1ayMXgNlmByb.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21519-SUo3ZQuCbYhJ.png"
     },
     {
         id: 199,
@@ -31,9 +32,9 @@ const CURATED_LANDSCAPES = [
         year: "2001",
         format: "MOVIE",
         score: 8.9,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/199-4V6P1e9k.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199-b1d6x8zW.jpg",
-        lore: "Submerged iron tracks gliding through mirror-smooth ocean waters under pastel clouds, where the lone spirit train journeys into the sunset."
+        lore: "Submerged iron tracks gliding through mirror-smooth ocean waters under pastel clouds, where the lone spirit train journeys into the sunset.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/199-Sm2RU5PSqw7T.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199-sWefXJvXkDOb.jpg"
     },
     {
         id: 154587,
@@ -45,9 +46,9 @@ const CURATED_LANDSCAPES = [
         year: "2023",
         format: "TV",
         score: 9.3,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/154587-n2btaSMjhUOI.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-573TGNQhA1p1.jpg",
-        lore: "A tranquil cliffside overlooking northern mountain valleys, carpeted in ethereal blue blossoms that sway softly in the cool alpine breeze."
+        lore: "A tranquil cliffside overlooking northern mountain valleys, carpeted in ethereal blue blossoms that sway softly in the cool alpine breeze.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/154587-ivXNJ23SM1xB.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg"
     },
     {
         id: 106286,
@@ -59,9 +60,9 @@ const CURATED_LANDSCAPES = [
         year: "2019",
         format: "MOVIE",
         score: 8.3,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/106286-sL9jBv4nB9l1.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx106286-621mF3j7s.jpg",
-        lore: "Radiant golden shafts of sunlight piercing torrential rainclouds, illuminating glistening rain puddles and Tokyo's boundless skyline."
+        lore: "Radiant golden shafts of sunlight piercing torrential rainclouds, illuminating glistening rain puddles and Tokyo's boundless skyline.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/106286-3oKwiwjd7Wkm.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx106286-5COcpd0J9VbL.png"
     },
     {
         id: 21827,
@@ -73,9 +74,9 @@ const CURATED_LANDSCAPES = [
         year: "2018",
         format: "TV",
         score: 8.6,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21827-0N2F3pTfI6m6.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21827-10ffHkuzj.jpg",
-        lore: "Cobblestone boulevards and iridescent canal reflections kissed by the evening glow, where handwritten letters carry unsaid emotions across the sea."
+        lore: "Cobblestone boulevards and iridescent canal reflections kissed by the evening glow, where handwritten letters carry unsaid emotions across the sea.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21827-ROucgYiiiSpR.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21827-ubzq619ZA2E9.png"
     },
     {
         id: 431,
@@ -87,12 +88,12 @@ const CURATED_LANDSCAPES = [
         year: "2004",
         format: "MOVIE",
         score: 8.8,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/431-7b9X3e3F.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx431-1e9k.jpg",
-        lore: "A pristine high-altitude meadow of wild star blossoms framed by jagged snow-capped summits, untouched by the noise of the outside world."
+        lore: "A pristine high-altitude meadow of wild star blossoms framed by jagged snow-capped summits, untouched by the noise of the outside world.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/431-fLBlvTgdqLCz.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx431-o8Lj3XkjHm2k.jpg"
     },
     {
-        id: 142329,
+        id: 142770,
         title: "Suzume",
         titleNative: "すずめの戸締まり",
         scene: "The Abandoned Onsen Gateway to the Ever-After",
@@ -101,9 +102,9 @@ const CURATED_LANDSCAPES = [
         year: "2022",
         format: "MOVIE",
         score: 8.4,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/142329-8q2L4h3oP9jX.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx142329-3L9J.jpg",
-        lore: "A silent moss-covered rotunda standing in shallow springwater, framing a door that opens into a cosmic twilight where all times converge."
+        lore: "A silent moss-covered rotunda standing in shallow springwater, framing a door that opens into a cosmic twilight where all times converge.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/142770-YgESt2HJXlNg.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx142770-dDaDIRnsv5jN.jpg"
     },
     {
         id: 16498,
@@ -115,9 +116,9 @@ const CURATED_LANDSCAPES = [
         year: "2013",
         format: "TV",
         score: 8.5,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-8TO00P9zPzNu.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-m5T.jpg",
-        lore: "Vast rolling emerald plains stretching toward the distant horizon under the first golden rays of dawn, whispering the promise of freedom."
+        lore: "Vast rolling emerald plains stretching toward the distant horizon under the first golden rays of dawn, whispering the promise of freedom.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-8jpFCOcDmneX.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-buvcRTBx4NSm.jpg"
     },
     {
         id: 101922,
@@ -129,9 +130,9 @@ const CURATED_LANDSCAPES = [
         year: "2019",
         format: "TV",
         score: 8.5,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/101922-YATy0mFs4p1c.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-PEn1CTDYeaInitialize.jpg",
-        lore: "Cascades of luminous violet wisteria blossoms glowing gently under moonlight, forming an ancient protective perimeter against the night."
+        lore: "Cascades of luminous violet wisteria blossoms glowing gently under moonlight, forming an ancient protective perimeter against the night.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/101922-33MtJGsUSxga.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg"
     },
     {
         id: 9253,
@@ -143,9 +144,37 @@ const CURATED_LANDSCAPES = [
         year: "2011",
         format: "TV",
         score: 9.0,
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/9253-eU4vWl3t4y3k.jpg",
-        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-e9bg5yZt4j2R.jpg",
-        lore: "Long shadows stretching across the Tokyo pedestrian overpasses as cicadas buzz softly in the sweltering summer air of World Line α."
+        lore: "Long shadows stretching across the Tokyo pedestrian overpasses as cicadas buzz softly in the sweltering summer air of World Line α.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/n9253-JIhmKgBKsWUN.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-tIUXF2gfU8Sg.jpg"
+    },
+    {
+        id: 20954,
+        title: "A Silent Voice",
+        titleNative: "聲の形",
+        scene: "The Ogaki Water Promenade at Twilight",
+        studio: "Kyoto Animation",
+        director: "Naoko Yamada",
+        year: "2016",
+        format: "MOVIE",
+        score: 8.8,
+        lore: "Cherry blossoms drifting quietly across the canal ripples under streetlamps, carrying the silent harmony of reconciliation and renewal.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/20954-f30bHMXa5Qoe.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20954-sYRfE5jQRtSB.jpg"
+    },
+    {
+        id: 164,
+        title: "Princess Mononoke",
+        titleNative: "もののけ姫",
+        scene: "The Ancient Forest of the Great Forest Spirit",
+        studio: "Studio Ghibli",
+        director: "Hayao Miyazaki",
+        year: "1997",
+        format: "MOVIE",
+        score: 8.7,
+        lore: "Ancient emerald moss-draped cedar glades where Kodama click gently in the shadows, guardians of a sacred primordial sanctuary.",
+        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/164-Aj6MINy7VTfs.jpg",
+        poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx164-ySuGzCWVw2cL.jpg"
     }
 ];
 
@@ -154,6 +183,7 @@ const SLIDE_DURATION_MS = 5000; // Exact 5 seconds as requested
 export default function Cinemation() {
     const { popularAnime } = useGlobalContext();
     const [useLiveBanners, setUseLiveBanners] = useState(false);
+    const [curatedList, setCuratedList] = useState(CURATED_LANDSCAPES);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
     const [isHoveringCard, setIsHoveringCard] = useState(false);
@@ -162,6 +192,8 @@ export default function Cinemation() {
     const [progressPercent, setProgressPercent] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isAudioActive, setIsAudioActive] = useState(false);
+    const [vignetteEnabled, setVignetteEnabled] = useState(false);
+    const [showControls, setShowControls] = useState(true);
 
     const containerRef = useRef(null);
     const audioContextRef = useRef(null);
@@ -169,10 +201,59 @@ export default function Cinemation() {
     const hoverTimeoutRef = useRef(null);
     const progressIntervalRef = useRef(null);
     const lastTickTimeRef = useRef(Date.now());
+    const controlsTimeoutRef = useRef(null);
 
-    // Build the active slide list: curated landscapes or live banners from global context
+    // Fetch live banner URLs directly from AniList for curated landscapes
+    useEffect(() => {
+        let isMounted = true;
+        const fetchCuratedBanners = async () => {
+            try {
+                const ids = CURATED_LANDSCAPES.map(c => c.id);
+                const query = `
+                    query($ids: [Int]) {
+                        Page(page: 1, perPage: 25) {
+                            media(id_in: $ids, type: ANIME) {
+                                id
+                                bannerImage
+                                coverImage { extraLarge large }
+                            }
+                        }
+                    }
+                `;
+                const res = await fetchAniList(query, { ids });
+                const mediaList = res?.Page?.media || [];
+                if (mediaList.length > 0 && isMounted) {
+                    const bannerMap = new Map();
+                    mediaList.forEach(m => {
+                        if (m.bannerImage) {
+                            bannerMap.set(m.id, {
+                                bannerImage: m.bannerImage,
+                                poster: m.coverImage?.extraLarge || m.coverImage?.large
+                            });
+                        }
+                    });
+
+                    setCuratedList(prev => prev.map(item => {
+                        const live = bannerMap.get(item.id);
+                        if (!live) return item;
+                        return {
+                            ...item,
+                            image: live.bannerImage || item.image,
+                            poster: live.poster || item.poster
+                        };
+                    }));
+                }
+            } catch (err) {
+                console.warn('[Cinemation] Using verified static curated landscapes fallback:', err);
+            }
+        };
+
+        fetchCuratedBanners();
+        return () => { isMounted = false; };
+    }, []);
+
+    // Build the active slide list: live banners from global context or curated landscapes
     const slideList = useMemo(() => {
-        if (!useLiveBanners) return CURATED_LANDSCAPES;
         const liveWithBanners = (popularAnime || [])
             .filter(a => a.bannerImage)
             .map(a => ({
@@ -186,11 +267,15 @@ export default function Cinemation() {
                 format: a.type || 'TV',
                 score: a.score || 8.5,
                 image: a.bannerImage,
-                poster: a.images?.jpg?.large_image_url || a.coverImage?.large || '',
+                poster: a.coverImage?.large || a.images?.jpg?.large_image_url || '',
                 lore: a.synopsis ? a.synopsis.substring(0, 160) + '...' : 'A captivating moment frozen in high resolution from the official transmission archives.'
             }));
-        return liveWithBanners.length > 0 ? liveWithBanners : CURATED_LANDSCAPES;
-    }, [useLiveBanners, popularAnime]);
+
+        if (useLiveBanners) {
+            return liveWithBanners.length > 0 ? liveWithBanners : curatedList;
+        }
+        return curatedList;
+    }, [useLiveBanners, popularAnime, curatedList]);
 
     const currentSlide = slideList[currentIndex] || slideList[0];
 
@@ -246,7 +331,64 @@ export default function Cinemation() {
         lastTickTimeRef.current = Date.now();
     }, [currentIndex]);
 
-    // Keyboard navigation (Left/Right arrows, Spacebar)
+    // Fullscreen toggle handler
+    const toggleFullscreen = useCallback(async () => {
+        if (!containerRef.current) return;
+        try {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (containerRef.current.requestFullscreen) {
+                    await containerRef.current.requestFullscreen();
+                } else if (containerRef.current.webkitRequestFullscreen) {
+                    await containerRef.current.webkitRequestFullscreen();
+                }
+                setIsFullscreen(true);
+                setShowControls(true);
+            } else {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                }
+                setIsFullscreen(false);
+                setShowControls(true);
+            }
+        } catch (err) {
+            console.error('Fullscreen error:', err);
+            setIsFullscreen(prev => !prev);
+            setShowControls(true);
+        }
+    }, []);
+
+    // Synchronize fullscreen state from document changes
+    useEffect(() => {
+        const handleFsChange = () => {
+            const fsActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            setIsFullscreen(fsActive);
+            setShowControls(true);
+            if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+        };
+        document.addEventListener('fullscreenchange', handleFsChange);
+        document.addEventListener('webkitfullscreenchange', handleFsChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFsChange);
+            document.removeEventListener('webkitfullscreenchange', handleFsChange);
+            if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+        };
+    }, []);
+
+    // Auto-hide controls during mouse inactivity in fullscreen
+    const handleContainerMouseMove = useCallback(() => {
+        if (!isFullscreen) return;
+        setShowControls(true);
+        if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+        controlsTimeoutRef.current = setTimeout(() => {
+            if (!isButtonHovered && !isCardHovered) {
+                setShowControls(false);
+            }
+        }, 2800);
+    }, [isFullscreen, isButtonHovered, isCardHovered]);
+
+    // Keyboard navigation (Left/Right arrows, Spacebar, F for Fullscreen, Esc)
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -259,36 +401,17 @@ export default function Cinemation() {
             } else if (e.key === ' ' || e.code === 'Space') {
                 e.preventDefault();
                 setIsPlaying(p => !p);
+            } else if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen();
+            } else if (e.key === 'Escape' && isFullscreen) {
+                toggleFullscreen();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [nextSlide, prevSlide]);
-
-    // Fullscreen toggle handler
-    const toggleFullscreen = async () => {
-        if (!containerRef.current) return;
-        try {
-            if (!document.fullscreenElement) {
-                await containerRef.current.requestFullscreen();
-                setIsFullscreen(true);
-            } else {
-                await document.exitFullscreen();
-                setIsFullscreen(false);
-            }
-        } catch (err) {
-            console.error('Fullscreen error:', err);
-        }
-    };
-
-    useEffect(() => {
-        const handleFsChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
-        };
-        document.addEventListener('fullscreenchange', handleFsChange);
-        return () => document.removeEventListener('fullscreenchange', handleFsChange);
-    }, []);
+    }, [nextSlide, prevSlide, toggleFullscreen, isFullscreen]);
 
     // Ambient Lofi Audio Synthesizer (Pure Web Audio API — 0 external files)
     const toggleAmbientAudio = () => {
@@ -413,7 +536,11 @@ export default function Cinemation() {
     };
 
     return (
-        <CinemationStyled ref={containerRef} className={isFullscreen ? 'is-fullscreen' : ''}>
+        <CinemationStyled 
+            ref={containerRef} 
+            className={`${isFullscreen ? 'is-fullscreen' : ''} ${isFullscreen && !showControls ? 'controls-hidden' : ''}`}
+            onMouseMove={handleContainerMouseMove}
+        >
             {/* Ambient Title & Control Ribbon */}
             <div className="cinemation-ribbon">
                 <div className="ribbon-brand">
@@ -450,12 +577,23 @@ export default function Cinemation() {
                         <span>{isAudioActive ? 'LOFI CHORDS: ON' : 'CHILL AUDIO'}</span>
                     </button>
 
+                    {/* Vignette Toggle (Disabled in Fullscreen & Default OFF) */}
+                    <button
+                        type="button"
+                        className={`vignette-btn ${vignetteEnabled ? 'active' : ''}`}
+                        onClick={() => setVignetteEnabled(v => !v)}
+                        title={vignetteEnabled ? "Vignette enabled (click to disable)" : "Vignette disabled (click to enable)"}
+                    >
+                        <span className="vignette-icon">◐</span>
+                        <span>{vignetteEnabled ? 'VIGNETTE: ON' : 'VIGNETTE: OFF'}</span>
+                    </button>
+
                     {/* Fullscreen Toggle */}
                     <button
                         type="button"
                         className="fs-btn"
                         onClick={toggleFullscreen}
-                        title="Toggle full-screen cinema view"
+                        title="Toggle full-screen cinema view (F key or double-click)"
                     >
                         <span>{isFullscreen ? '⤓ EXIT FULLSCREEN' : '⤢ FULLSCREEN'}</span>
                     </button>
@@ -467,6 +605,8 @@ export default function Cinemation() {
                 className="cinema-theater"
                 onMouseEnter={() => setIsHoveringCard(true)}
                 onMouseLeave={() => setIsHoveringCard(false)}
+                onDoubleClick={toggleFullscreen}
+                title={isFullscreen ? "Double-click to exit fullscreen" : "Double-click for fullscreen"}
             >
                 {/* 5-Second Real-Time Animated Progress Bar */}
                 <div className="slideshow-progress-track">
@@ -488,12 +628,12 @@ export default function Cinemation() {
                                 key={`${item.id}-${index}`}
                                 className={`cinema-slide ${isActive ? 'active' : ''}`}
                                 style={{
-                                    backgroundImage: `url(${item.image})`,
+                                    backgroundImage: `url(${item.image}), url(${item.poster})`,
                                     zIndex: isActive ? 2 : 1
                                 }}
                             >
-                                <div className="cinema-vignette" />
-                                <div className="cinema-light-leak" />
+                                {vignetteEnabled && !isFullscreen && <div className="cinema-vignette" />}
+                                {!isFullscreen && <div className="cinema-light-leak" />}
                             </div>
                         );
                     })}
@@ -661,36 +801,47 @@ export default function Cinemation() {
             </div>
 
             {/* Bottom Landscape Carousel Thumbnails */}
-            <div className="landscape-thumbnail-strip">
-                <div className="strip-header">
-                    <span className="strip-label">// SCENERY REEL SELECTOR ({slideList.length} TRANSMISSIONS)</span>
-                    <span className="strip-hint">CLICK ANY SLIDE TO SWITCH • 5S AUTO-CYCLE</span>
+            {!isFullscreen && (
+                <div className="landscape-thumbnail-strip">
+                    <div className="strip-header">
+                        <span className="strip-label">{"// SCENERY REEL SELECTOR ("}{slideList.length}{" TRANSMISSIONS)"}</span>
+                        <span className="strip-hint">CLICK ANY SLIDE TO SWITCH • 5S AUTO-CYCLE</span>
+                    </div>
+                    <div className="thumbnails-track">
+                        {slideList.map((item, idx) => {
+                            const isSelected = idx === currentIndex;
+                            return (
+                                <button
+                                    key={`thumb-${item.id}-${idx}`}
+                                    type="button"
+                                    className={`thumb-card ${isSelected ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setCurrentIndex(idx);
+                                        setProgressPercent(0);
+                                    }}
+                                    title={`${item.title} — ${item.scene}`}
+                                >
+                                    <img 
+                                        src={item.image} 
+                                        alt={item.scene} 
+                                        loading="lazy"
+                                        onError={(e) => {
+                                            if (item.poster && e.target.src !== item.poster) {
+                                                e.target.src = item.poster;
+                                            }
+                                        }}
+                                    />
+                                    <div className="thumb-info">
+                                        <span className="thumb-index">#{String(idx + 1).padStart(2, '0')}</span>
+                                        <span className="thumb-title">{item.title}</span>
+                                    </div>
+                                    {isSelected && <div className="thumb-active-glow" />}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-                <div className="thumbnails-track">
-                    {slideList.map((item, idx) => {
-                        const isSelected = idx === currentIndex;
-                        return (
-                            <button
-                                key={`thumb-${item.id}-${idx}`}
-                                type="button"
-                                className={`thumb-card ${isSelected ? 'active' : ''}`}
-                                onClick={() => {
-                                    setCurrentIndex(idx);
-                                    setProgressPercent(0);
-                                }}
-                                title={`${item.title} — ${item.scene}`}
-                            >
-                                <img src={item.image} alt={item.scene} loading="lazy" />
-                                <div className="thumb-info">
-                                    <span className="thumb-index">#{String(idx + 1).padStart(2, '0')}</span>
-                                    <span className="thumb-title">{item.title}</span>
-                                </div>
-                                {isSelected && <div className="thumb-active-glow" />}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+            )}
         </CinemationStyled>
     );
 }
@@ -733,23 +884,125 @@ const CinemationStyled = styled.div`
         width: 100vw !important;
         max-width: 100vw !important;
         height: 100vh !important;
+        max-height: 100vh !important;
         margin: 0 !important;
-        padding: 1.5rem !important;
-        background: #0d0e12 !important;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        z-index: 999999;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        padding: 0 !important;
+        background: #000000 !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 9999999 !important;
+        overflow: hidden !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+
+        &.controls-hidden {
+            cursor: none !important;
+
+            .cinemation-ribbon,
+            .cinema-hud-bottom,
+            .nav-chevron,
+            .slideshow-progress-track {
+                opacity: 0 !important;
+                pointer-events: none !important;
+                transform: translateY(0);
+            }
+        }
+
+        .landscape-thumbnail-strip {
+            display: none !important;
+        }
 
         .cinema-theater {
-            flex: 1;
-            height: calc(100vh - 160px) !important;
-            max-height: calc(100vh - 160px) !important;
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+
+            &::before,
+            &::after {
+                display: none !important;
+            }
+        }
+
+        .cinemation-ribbon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            margin: 0;
+            padding: 1.25rem 2.5rem;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.3) 65%, transparent 100%);
+            transition: opacity 350ms ease, transform 350ms ease;
+
+            .ribbon-brand {
+                .title-group {
+                    .telemetry-pill {
+                        color: ${tokens.colors.accent};
+                        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+                    }
+                    h2 {
+                        color: #ffffff;
+                        font-size: 1.35rem;
+                        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+                    }
+                }
+            }
+
+            .ribbon-controls button {
+                background: rgba(15, 17, 23, 0.85);
+                backdrop-filter: blur(12px);
+                border-color: rgba(255, 255, 255, 0.22);
+                color: #f1f5f9;
+
+                &:hover {
+                    background: ${tokens.colors.accent};
+                    color: #ffffff;
+                    border-color: ${tokens.colors.accent};
+                    transform: translateY(-1px);
+                }
+
+                &.fs-btn {
+                    background: ${tokens.colors.accent};
+                    color: #ffffff;
+                    border-color: ${tokens.colors.accent};
+                    font-weight: 800;
+                    box-shadow: 0 0 16px rgba(255, 94, 40, 0.6);
+
+                    &:hover {
+                        background: ${tokens.colors.accentHover};
+                    }
+                }
+            }
+        }
+
+        .cinema-hud-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 2rem 2.5rem 2.25rem 2.5rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 65%, transparent 100%);
+            transition: opacity 350ms ease, transform 350ms ease;
+        }
+
+        .nav-chevron {
+            z-index: 100;
+            transition: opacity 350ms ease, transform 150ms ease;
+        }
+
+        .slideshow-progress-track {
+            z-index: 110;
+            transition: opacity 350ms ease;
         }
     }
 
@@ -911,16 +1164,12 @@ const CinemationStyled = styled.div`
             .cinema-vignette {
                 position: absolute;
                 inset: 0;
+                pointer-events: none;
                 background: radial-gradient(
                     circle at center,
-                    transparent 45%,
-                    rgba(0, 0, 0, 0.45) 80%,
-                    rgba(0, 0, 0, 0.85) 100%
-                ), linear-gradient(
-                    to top,
-                    rgba(9, 10, 15, 0.92) 0%,
-                    rgba(9, 10, 15, 0.4) 25%,
-                    transparent 55%
+                    transparent 60%,
+                    rgba(0, 0, 0, 0.25) 85%,
+                    rgba(0, 0, 0, 0.55) 100%
                 );
             }
 

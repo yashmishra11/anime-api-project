@@ -1,14 +1,12 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { tokens, cornerScrews, ventSlots, crtScanlines } from '../theme/tokens';
-import { useGlobalContext } from '../context/global';
 import { fetchAniList, ANIME_DETAILS_QUERY, normalizeAniListMedia } from '../services/anilist';
 import WatchlistButton from './WatchlistButton';
 
 function AnimeItem() {
     const { id } = useParams();
-    const { popularAnime, upcomingAnime, airingAnime } = useGlobalContext();
 
     // states
     const [anime, setAnime] = useState({});
@@ -82,7 +80,11 @@ function AnimeItem() {
                             mal_id: edge.node.id,
                             name: edge.node.title?.english || edge.node.title?.romaji || 'Unknown Title',
                             type: edge.node.format,
-                            coverImage: edge.node.coverImage
+                            mediaType: edge.node.type,
+                            coverImage: edge.node.coverImage,
+                            score: edge.node.averageScore ? Number((edge.node.averageScore / 10).toFixed(1)) : null,
+                            year: edge.node.seasonYear,
+                            episodes: edge.node.episodes
                         }
                     ]
                 })) || [];
@@ -91,10 +93,10 @@ function AnimeItem() {
                 media.relations?.edges?.forEach((edge) => {
                     initDetails[String(edge.node.id)] = {
                         image: edge.node.coverImage?.large || edge.node.coverImage?.medium,
-                        score: null,
-                        year: null,
+                        score: edge.node.averageScore ? Number((edge.node.averageScore / 10).toFixed(1)) : null,
+                        year: edge.node.seasonYear,
                         type: edge.node.format,
-                        episodes: null
+                        episodes: edge.node.episodes
                     };
                 });
 
@@ -154,14 +156,18 @@ function AnimeItem() {
             const relationType = relGroup?.relation || 'Related';
             const entries = Array.isArray(relGroup?.entry) ? relGroup.entry : [];
             entries.forEach((entry) => {
-                if (entry && entry.type === 'anime') {
-                    list.push({
-                        relation: relationType,
-                        mal_id: entry.mal_id,
-                        name: entry.name,
-                        url: entry.url,
-                        type: entry.type
-                    });
+                if (entry) {
+                    const isAnime = entry.mediaType === 'ANIME' ||
+                        !['MANGA', 'NOVEL', 'ONE_SHOT'].includes(entry.type);
+                    if (isAnime) {
+                        list.push({
+                            relation: relationType,
+                            mal_id: entry.mal_id,
+                            name: entry.name,
+                            url: entry.url,
+                            type: entry.type
+                        });
+                    }
                 }
             });
         });
@@ -260,107 +266,28 @@ function AnimeItem() {
         };
     };
 
-    // Safe fetch for related anime visual posters with cache
+    // Cache and sync related anime visual posters
     useEffect(() => {
         if (!relatedAnimeList || relatedAnimeList.length === 0) return;
 
-        let isMounted = true;
         const initialDetails = {};
-        const missingIds = [];
-
-        // Check global context and sessionStorage first for immediate display
         relatedAnimeList.forEach((item) => {
             const idStr = String(item.mal_id);
-            const cached = sessionStorage.getItem(`anime_thumb_${idStr}`) || sessionStorage.getItem(`anime_full_${idStr}`);
+            const cached = sessionStorage.getItem(`anime_thumb_${idStr}`);
             if (cached) {
                 try {
                     const parsed = JSON.parse(cached);
-                    const img = parsed.image || parsed.images?.webp?.large_image_url || parsed.images?.jpg?.large_image_url || parsed.images?.jpg?.image_url;
-                    if (img) {
-                        initialDetails[idStr] = {
-                            image: img,
-                            score: parsed.score,
-                            year: parsed.year || parsed.aired?.prop?.from?.year,
-                            type: parsed.type,
-                            episodes: parsed.episodes
-                        };
-                        return;
+                    if (parsed && parsed.image) {
+                        initialDetails[idStr] = parsed;
                     }
                 } catch {}
             }
-
-            const fromGlobal = [...(popularAnime || []), ...(upcomingAnime || []), ...(airingAnime || [])].find(
-                (a) => String(a.mal_id) === idStr
-            );
-            if (fromGlobal) {
-                const detail = {
-                    image: fromGlobal.images?.webp?.large_image_url || fromGlobal.images?.jpg?.large_image_url || fromGlobal.images?.jpg?.image_url,
-                    score: fromGlobal.score,
-                    year: fromGlobal.year || fromGlobal.aired?.prop?.from?.year,
-                    type: fromGlobal.type,
-                    episodes: fromGlobal.episodes
-                };
-                initialDetails[idStr] = detail;
-                try {
-                    sessionStorage.setItem(`anime_thumb_${idStr}`, JSON.stringify(detail));
-                } catch {}
-                return;
-            }
-
-            missingIds.push(item.mal_id);
         });
 
         if (Object.keys(initialDetails).length > 0) {
             setRelatedDetails((prev) => ({ ...prev, ...initialDetails }));
         }
-
-        if (missingIds.length === 0) return;
-
-        // Fetch at most 3 missing primary items after 1.5s delay to prioritize main page
-        const timer = setTimeout(async () => {
-            if (!isMounted) return;
-            const queueToFetch = missingIds.slice(0, 3);
-            for (let i = 0; i < queueToFetch.length; i++) {
-                if (!isMounted) break;
-                const targetId = queueToFetch[i];
-
-                try {
-                    const response = await fetch(`https://api.jikan.moe/v4/anime/${targetId}`);
-                    if (response.status === 429) {
-                        console.warn(`[Jikan Throttled] Halting background thumbnail queue.`);
-                        break;
-                    }
-                    if (response.ok) {
-                        const json = await response.json();
-                        const data = json?.data;
-                        if (data && isMounted) {
-                            const detail = {
-                                image: data.images?.webp?.large_image_url || data.images?.jpg?.large_image_url || data.images?.jpg?.image_url,
-                                score: data.score,
-                                year: data.year || data.aired?.prop?.from?.year,
-                                type: data.type,
-                                episodes: data.episodes
-                            };
-                            try {
-                                sessionStorage.setItem(`anime_thumb_${targetId}`, JSON.stringify(detail));
-                            } catch {}
-                            setRelatedDetails((prev) => ({ ...prev, [targetId]: detail }));
-                        }
-                    }
-                } catch (err) {
-                    console.warn(`[Jikan] Error fetching visual for ${targetId}:`, err);
-                    break;
-                }
-
-                await new Promise((r) => setTimeout(r, 800));
-            }
-        }, 1500);
-
-        return () => {
-            isMounted = false;
-            clearTimeout(timer);
-        };
-    }, [relatedAnimeList, popularAnime, upcomingAnime, airingAnime]);
+    }, [relatedAnimeList]);
 
     return (
         <AnimeItemStyled>
@@ -389,7 +316,7 @@ function AnimeItem() {
                 <div className="spec-sheet-loading">
                     <div className="loading-radar">
                         <span className="pulse-blip" />
-                        <span className="radar-label">// DECRYPTING SPECIMEN TELEMETRY ARCHIVE [ID: #{id}]...</span>
+                        <span className="radar-label">{"// DECRYPTING SPECIMEN TELEMETRY ARCHIVE [ID: #"}{id}{"]..."}</span>
                     </div>
                 </div>
             ) : (
@@ -406,7 +333,7 @@ function AnimeItem() {
                                             alt={title || "Anime Poster"}
                                         />
                                     ) : (
-                                        <div className="no-specimen-img">// NO VISUAL TRANSMISSION</div>
+                                        <div className="no-specimen-img">{"// NO VISUAL TRANSMISSION"}</div>
                                     )}
                                 </div>
                             </div>
@@ -427,7 +354,7 @@ function AnimeItem() {
                         </div>
 
                         <div className='description-container'>
-                            <span className='section-label'>// SYNOPSIS SPECIFICATION</span>
+                            <span className='section-label'>{"// SYNOPSIS SPECIFICATION"}</span>
                             <p className='description'>
                                 {showMore ? synopsis : (synopsis ? synopsis.substring(0, 450) + (synopsis.length > 450 ? '...' : '') : 'No synopsis provided.')}
                                 {synopsis && synopsis.length > 450 && (
@@ -475,7 +402,7 @@ function AnimeItem() {
                 <h3 className='title'>Connected Universe & Franchise Chronology</h3>
                 {relatedAnimeList && relatedAnimeList.length > 0 && (
                     <span className="specimen-count">
-                        // {relatedAnimeList.length} SATELLITE TRANSMISSIONS
+                        {"// "}{relatedAnimeList.length}{" SATELLITE TRANSMISSIONS"}
                     </span>
                 )}
             </div>
@@ -484,7 +411,7 @@ function AnimeItem() {
                 <div className="relations-loading">
                     <div className="loading-radar">
                         <span className="pulse-blip" />
-                        <span className="radar-label">// SCANNING SATELLITE NETWORK FOR UNIVERSE CHRONOLOGY...</span>
+                        <span className="radar-label">{"// SCANNING SATELLITE NETWORK FOR UNIVERSE CHRONOLOGY..."}</span>
                     </div>
                 </div>
             ) : relatedAnimeList && relatedAnimeList.length > 0 ? (
@@ -524,7 +451,7 @@ function AnimeItem() {
                                                 <div className="scanner-radar">
                                                     <span className="pulse-blip" />
                                                 </div>
-                                                <span className="scanner-label">// SCANNING VISUAL...</span>
+                                                <span className="scanner-label">{"// SCANNING VISUAL..."}</span>
                                                 <span className="scanner-id">ID #{relItem.mal_id}</span>
                                             </div>
                                         )}
@@ -593,7 +520,7 @@ function AnimeItem() {
             ) : (
                 <div className="relations-empty">
                     <span className="empty-dot" />
-                    <p>// STANDALONE TRANSMISSION — NO RECORDED PREQUELS, SEQUELS, OR SATELLITE CHRONOLOGY ARCHIVED</p>
+                    <p>{"// STANDALONE TRANSMISSION — NO RECORDED PREQUELS, SEQUELS, OR SATELLITE CHRONOLOGY ARCHIVED"}</p>
                 </div>
             )}
 
@@ -601,7 +528,7 @@ function AnimeItem() {
                 <h3 className='title'>Character Specimen Bank</h3>
                 {characters && characters.length > 0 && (
                     <span className="specimen-count">
-                        // {characters.length} ARCHIVED SPECIMENS
+                        {"// "}{characters.length}{" ARCHIVED SPECIMENS"}
                     </span>
                 )}
             </div>
@@ -610,7 +537,7 @@ function AnimeItem() {
                 <div className="characters-loading">
                     <div className="loading-radar">
                         <span className="pulse-blip" />
-                        <span className="radar-label">// SCANNING CHARACTER ARCHIVES...</span>
+                        <span className="radar-label">{"// SCANNING CHARACTER ARCHIVES..."}</span>
                     </div>
                 </div>
             ) : characters && characters.length > 0 ? (
@@ -661,7 +588,7 @@ function AnimeItem() {
             ) : (
                 <div className="characters-empty">
                     <span className="empty-dot" />
-                    <p>// NO CHARACTER SPECIMENS ARCHIVED FOR THIS TRANSMISSION</p>
+                    <p>{"// NO CHARACTER SPECIMENS ARCHIVED FOR THIS TRANSMISSION"}</p>
                 </div>
             )}
         </AnimeItemStyled>

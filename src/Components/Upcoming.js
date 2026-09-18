@@ -6,7 +6,13 @@ import AnimeCard from './AnimeCard';
 import { tokens } from '../theme/tokens';
 
 function Upcoming({ selectedGenre = 'Overall', onResetGenre }) {
-    const { upcomingAnime, isSearch, searchResults } = useGlobalContext();
+    const { upcomingAnime, isSearch, searchResults, getUpcomingAnime } = useGlobalContext();
+
+    React.useEffect(() => {
+        if (!upcomingAnime || upcomingAnime.length === 0) {
+            getUpcomingAnime();
+        }
+    }, [upcomingAnime, getUpcomingAnime]);
 
     const baseList = isSearch ? searchResults : (upcomingAnime || []);
 
@@ -41,7 +47,7 @@ function Upcoming({ selectedGenre = 'Overall', onResetGenre }) {
                 ) : (
                     <div className="empty-terminal">
                         <span className="dot-blink" />
-                        <p>// NO UPCOMING TRANSMISSIONS QUEUED FOR [{selectedGenre.toUpperCase()}]</p>
+                        <p>{"// NO UPCOMING TRANSMISSIONS QUEUED FOR ["}{selectedGenre.toUpperCase()}{"]"}</p>
                         {onResetGenre && (
                             <button type="button" className="reset-btn" onClick={onResetGenre}>
                                 RETURN TO ALL SPECIMENS

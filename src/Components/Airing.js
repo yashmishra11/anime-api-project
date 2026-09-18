@@ -6,7 +6,13 @@ import AnimeCard from './AnimeCard';
 import { tokens } from '../theme/tokens';
 
 function Airing({ selectedGenre = 'Overall', onResetGenre }) {
-    const { airingAnime, isSearch, searchResults } = useGlobalContext();
+    const { airingAnime, isSearch, searchResults, getAiringAnime } = useGlobalContext();
+
+    React.useEffect(() => {
+        if (!airingAnime || airingAnime.length === 0) {
+            getAiringAnime();
+        }
+    }, [airingAnime, getAiringAnime]);
 
     const baseList = isSearch ? searchResults : (airingAnime || []);
 
@@ -41,7 +47,7 @@ function Airing({ selectedGenre = 'Overall', onResetGenre }) {
                 ) : (
                     <div className="empty-terminal">
                         <span className="dot-blink" />
-                        <p>// NO CURRENTLY AIRING TRANSMISSIONS DETECTED FOR [{selectedGenre.toUpperCase()}]</p>
+                        <p>{"// NO CURRENTLY AIRING TRANSMISSIONS DETECTED FOR ["}{selectedGenre.toUpperCase()}{"]"}</p>
                         {onResetGenre && (
                             <button type="button" className="reset-btn" onClick={onResetGenre}>
                                 RETURN TO ALL SPECIMENS

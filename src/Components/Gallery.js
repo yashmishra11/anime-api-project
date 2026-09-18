@@ -69,12 +69,26 @@ function Gallery() {
                         role: passedRole,
                         gender: char.gender || null,
                         age: char.age || null,
+                        favorites: typeof char.favourites === 'number' ? char.favourites : (char.favorites || null),
                         media: char.media?.nodes || []
                     };
 
                     setCharacter(normalizedChar);
+
+                    const frames = [];
                     if (imgUrl) {
-                        setPictures([{ jpg: { image_url: imgUrl } }]);
+                        frames.push({ jpg: { image_url: imgUrl } });
+                    }
+                    if (Array.isArray(char.media?.nodes)) {
+                        char.media.nodes.forEach(m => {
+                            const mCover = m.coverImage?.large || m.coverImage?.medium;
+                            if (mCover && !frames.some(f => f.jpg.image_url === mCover)) {
+                                frames.push({ jpg: { image_url: mCover } });
+                            }
+                        });
+                    }
+                    if (frames.length > 0) {
+                        setPictures(frames);
                     }
                     document.title = `${normalizedChar.name} // Character Dossier - AniLog`;
 
@@ -149,7 +163,7 @@ function Gallery() {
                 <div className="nav-telemetry">
                     <span className="led-status" />
                     <span className="telemetry-label">
-                        SPECIMEN ARCHIVE // ID: {id} // {pictures.length} FRAMES
+                        {"SPECIMEN ARCHIVE // ID: "}{id}{" // "}{pictures.length}{" FRAMES"}
                     </span>
                 </div>
             </div>
@@ -159,7 +173,7 @@ function Gallery() {
                 <div className="dossier-header-bar">
                     <div className="dossier-status">
                         <span className="pulse-led" />
-                        <span className="dossier-label">// CLASSIFIED SPECIMEN DOSSIER</span>
+                        <span className="dossier-label">{"// CLASSIFIED SPECIMEN DOSSIER"}</span>
                     </div>
                     <div className="dossier-vents">
                         <span />
@@ -179,11 +193,23 @@ function Gallery() {
                                 <span className="val">{charRole.toUpperCase()}</span>
                             </div>
                         )}
-                        {favorites !== undefined && (
+                        {favorites !== null && favorites !== undefined && (
                             <div className="spec-pill fav-pill">
                                 <span className="star">★</span>
                                 <span className="val">{favorites.toLocaleString()}</span>
                                 <span className="unit">FAVORITES</span>
+                            </div>
+                        )}
+                        {character?.gender && (
+                            <div className="spec-pill">
+                                <span className="label">GENDER:</span>
+                                <span className="val">{character.gender.toUpperCase()}</span>
+                            </div>
+                        )}
+                        {character?.age && (
+                            <div className="spec-pill">
+                                <span className="label">AGE:</span>
+                                <span className="val">{character.age}</span>
                             </div>
                         )}
                         {passedAnimeTitle && (
@@ -261,7 +287,7 @@ function Gallery() {
                     ) : (
                         <div className="empty-viewport">
                             <span className="empty-led" />
-                            <p className="empty-title">// NO SPECIMEN FRAMES ARCHIVED</p>
+                            <p className="empty-title">{"// NO SPECIMEN FRAMES ARCHIVED"}</p>
                             <p className="empty-sub">Telemetry archives for this specimen could not be retrieved from satellite network.</p>
                         </div>
                     )}
@@ -273,7 +299,7 @@ function Gallery() {
                 <div className="small-images-panel">
                     <div className="panel-label-bar">
                         <span className="tray-title">
-                            // CARTRIDGE SELECTOR BANK [{pictures.length} FRAMES LOADED]
+                            {"// CARTRIDGE SELECTOR BANK ["}{pictures.length}{" FRAMES LOADED]"}
                         </span>
                         <span className="status-readout">STATUS: ONLINE</span>
                     </div>

@@ -238,20 +238,21 @@ export default function WatchlistFeed() {
                 {/* Grid of User Anime */}
                 <div className="entries-grid">
                     {processedEntries && processedEntries.length > 0 ? (
-                        processedEntries.map((entry) => {
+                        processedEntries.map((entry, index) => {
                             const animeData = entry.media;
                             if (!animeData) return null;
+                            const cardKey = entry.id || entry.mediaId || animeData.id || `entry-${index}`;
                             return (
                                 <AnimeCard
                                     anime={animeData}
-                                    key={entry.mediaId || animeData.id}
+                                    key={cardKey}
                                 />
                             );
                         })
                     ) : (
                         <div className="empty-state-terminal">
                             <span className="dot-blink" />
-                            <h4>// NO RECORDS FOUND FOR [{activeFilter}]</h4>
+                            <h4>{"// NO RECORDS FOUND FOR ["}{activeFilter}{"]"}</h4>
                             <p>
                                 {searchTerm
                                     ? `No titles match "${searchTerm}".`

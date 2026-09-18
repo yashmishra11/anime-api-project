@@ -61,6 +61,7 @@ function AnimeCard({ anime }) {
 
                     <div className="spec-row">
                         <span className="genre-pill">{primaryGenre}</span>
+                        {releaseYear && <span className="year-label">{releaseYear}</span>}
                         <div className="card-action-slot" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                             <WatchlistButton anime={anime} variant="compact" />
                         </div>

@@ -64,7 +64,16 @@ export const AuthProvider = ({ children }) => {
     const [loadingWatchlist, setLoadingWatchlist] = useState(false);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
-    // 3. User & Watchlist Fetcher
+    // 3. Logout action
+    const logout = useCallback(() => {
+        localStorage.removeItem(STORAGE_TOKEN_KEY);
+        setToken(null);
+        setUser(null);
+        setUserWatchlist({});
+        setWatchlistList([]);
+    }, []);
+
+    // 4. User & Watchlist Fetcher
     const loadUserData = useCallback(async (authToken) => {
         if (!authToken) {
             setUser(null);
@@ -106,8 +115,12 @@ export const AuthProvider = ({ children }) => {
                                         updatedAt: entry.updatedAt,
                                         media: normMedia
                                     };
-                                    map[entry.mediaId] = formattedEntry;
-                                    array.push(formattedEntry);
+                                    if (!map[entry.mediaId]) {
+                                        map[entry.mediaId] = formattedEntry;
+                                        array.push(formattedEntry);
+                                    } else {
+                                        map[entry.mediaId] = { ...map[entry.mediaId], ...formattedEntry };
+                                    }
                                 }
                             }
                         }
@@ -130,7 +143,7 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setLoadingUser(false);
         }
-    }, []);
+    }, [logout]);
 
     // Run on initial mount or token change
     useEffect(() => {
@@ -213,14 +226,6 @@ export const AuthProvider = ({ children }) => {
         }, 300);
     };
 
-    // 5. Logout action
-    const logout = () => {
-        localStorage.removeItem(STORAGE_TOKEN_KEY);
-        setToken(null);
-        setUser(null);
-        setUserWatchlist({});
-        setWatchlistList([]);
-    };
 
     // 6. Add or Update Entry in Watchlist
     const updateEntry = async (mediaId, status, progress = null, score = null, mediaInfo = null) => {

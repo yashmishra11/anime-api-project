@@ -43,7 +43,7 @@ function Popular({ selectedGenre = 'Overall', onResetGenre }) {
                 ) : (
                     <div className="empty-terminal">
                         <span className="dot-blink" />
-                        <p>// NO MATCHING SPECIMENS LOCATED FOR [{selectedGenre.toUpperCase()}]</p>
+                        <p>{"// NO MATCHING SPECIMENS LOCATED FOR ["}{selectedGenre.toUpperCase()}{"]"}</p>
                         {onResetGenre && (
                             <button type="button" className="reset-btn" onClick={onResetGenre}>
                                 RETURN TO ALL SPECIMENS
