@@ -6,6 +6,7 @@ import Upcoming from './Upcoming';
 import Airing from './Airing';
 import GenreSlider from './GenreSlider';
 import WatchlistFeed from './WatchlistFeed';
+import Cinemation from './Cinemation';
 import AuthButton from './AuthButton';
 import { tokens, cornerScrews, ventSlots } from '../theme/tokens';
 
@@ -34,6 +35,8 @@ function Homepage() {
             document.title = 'AniLog // Upcoming Release Queue';
         } else if (rendered === 'watchlist') {
             document.title = 'AniLog // Personal Watchlist Archive';
+        } else if (rendered === 'cinemation') {
+            document.title = 'AniLog // Cinemation Ambient Archive';
         }
     }, [rendered, isSearch, search]);
 
@@ -47,6 +50,8 @@ function Homepage() {
                 return <Upcoming selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
             case 'watchlist':
                 return <WatchlistFeed />;
+            case 'cinemation':
+                return <Cinemation />;
             default:
                 return <Popular selectedGenre={selectedGenre} onResetGenre={() => setSelectedGenre('Overall')} />;
         }
@@ -69,6 +74,8 @@ function Homepage() {
                                 ? 'LIVE AIRING FEED'
                                 : rendered === 'upcoming'
                                 ? 'UPCOMING PIPELINE'
+                                : rendered === 'cinemation'
+                                ? '❖ CINEMATION // CHILL AMBIENCE & LANDSCAPES'
                                 : 'PERSONAL WATCHLIST ARCHIVE'}
                         </span>
                     </div>
@@ -139,9 +146,20 @@ function Homepage() {
                             Watchlist
                         </button>
                     </div>
+
+                    <div className='filter-btn-cinemation-filter'>
+                        <button 
+                            className={rendered === 'cinemation' ? 'active-key' : ''}
+                            onClick={() => setRendered('cinemation')}
+                            title="Ambient anime landscapes & chill scenery slideshow"
+                        >
+                            <span className="key-indicator" />
+                            Cinemation
+                        </button>
+                    </div>
                 </div>
             </header>
-            {!isSearch && rendered !== 'watchlist' && (
+            {!isSearch && rendered !== 'watchlist' && rendered !== 'cinemation' && (
                 <>
                     <GenreSlider />
                     <CategoryDeckStyled>
@@ -301,7 +319,8 @@ const HomepageStyled = styled.div`
             .filter-btn-popular-filter button,
             .filter-btn-airing-filter button,
             .filter-btn-upcoming-filter button,
-            .filter-btn-watchlist-filter button {
+            .filter-btn-watchlist-filter button,
+            .filter-btn-cinemation-filter button {
                 position: relative;
                 display: flex;
                 align-items: center;
