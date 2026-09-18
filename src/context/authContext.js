@@ -37,6 +37,17 @@ export const AuthProvider = ({ children }) => {
             const params = new URLSearchParams(hash);
             const hashToken = params.get('access_token');
             if (hashToken) {
+                // If this window was opened as an authentication popup, notify opener and close
+                if (window.opener) {
+                    try {
+                        window.opener.postMessage(
+                            { type: 'ANILIST_AUTH_SUCCESS', token: hashToken },
+                            window.location.origin
+                        );
+                    } catch (e) {}
+                    window.close();
+                    return null;
+                }
                 localStorage.setItem(STORAGE_TOKEN_KEY, hashToken);
                 // Clean hash from URL without page reload
                 window.history.replaceState(null, null, window.location.pathname + window.location.search);
