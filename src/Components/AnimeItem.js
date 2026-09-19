@@ -18,6 +18,7 @@ function AnimeItem() {
     const [loadingChars, setLoadingChars] = useState(true);
     const [showAllChars, setShowAllChars] = useState(false);
     const [showMore, setShowMore] = useState(false);
+    const [activeRecFilter, setActiveRecFilter] = useState('all');
 
     // destructure anime
     const {
@@ -25,7 +26,8 @@ function AnimeItem() {
         duration, aired, airedString, season,
         images, rank, score, scored_by,
         popularity, members, status, rating, source,
-        episodes, isOngoing, studio, studios
+        episodes, isOngoing, studio, studios,
+        studioLineage, creatorLineage, communityRecs, lineageRecommendations
     } = anime;
 
     // Load anime specs from AniList GraphQL in a single request
@@ -34,13 +36,13 @@ function AnimeItem() {
         setLoadingRelations(true);
         setLoadingChars(true);
 
-        const cacheKey = `anime_spec_v4_${animeId}`;
+        const cacheKey = `anime_spec_v5_${animeId}`;
         try {
             const cached = sessionStorage.getItem(cacheKey);
             if (cached) {
                 const parsed = JSON.parse(cached);
-                // Validate that cache has the newly enriched telemetry
-                if (parsed && parsed.anime && (parsed.anime.airedString || parsed.anime.aired?.string)) {
+                // Validate that cache has the newly enriched telemetry and lineage recs
+                if (parsed && parsed.anime && (parsed.anime.airedString || parsed.anime.aired?.string) && parsed.anime.lineageRecommendations) {
                     setAnime(parsed.anime);
                     setCharacters(parsed.characters || []);
                     setRelations(parsed.relations || []);
@@ -136,6 +138,7 @@ function AnimeItem() {
         setCharacters([]);
         setShowAllChars(false);
         setShowMore(false);
+        setActiveRecFilter('all');
 
         loadAnimeSpecs(id);
     }, [id, loadAnimeSpecs]);
@@ -192,6 +195,50 @@ function AnimeItem() {
             return prioA - prioB;
         });
     }, [relations]);
+
+    // Filtered Lineage Recommendations (Studio, Creator/Director, Community)
+    const filteredLineageRecs = React.useMemo(() => {
+        if (!anime) return [];
+        if (activeRecFilter === 'studio') {
+            return studioLineage?.works || [];
+        }
+        if (activeRecFilter === 'creator') {
+            return creatorLineage?.works || [];
+        }
+        if (activeRecFilter === 'community') {
+            return communityRecs || [];
+        }
+        return lineageRecommendations || [];
+    }, [activeRecFilter, anime, studioLineage, creatorLineage, communityRecs, lineageRecommendations]);
+
+    // Lineage badge styling helper
+    const getLineageBadgeStyle = (type) => {
+        if (type === 'STUDIO') {
+            return {
+                label: 'STUDIO ARCHIVE',
+                color: '#f59e0b',
+                bg: 'rgba(245, 158, 11, 0.12)',
+                border: 'rgba(245, 158, 11, 0.35)',
+                dot: '#f59e0b'
+            };
+        }
+        if (type === 'CREATOR') {
+            return {
+                label: 'CREATOR / DIRECTOR',
+                color: tokens.colors.accent,
+                bg: 'rgba(255, 94, 40, 0.12)',
+                border: 'rgba(255, 94, 40, 0.35)',
+                dot: tokens.colors.accent
+            };
+        }
+        return {
+            label: 'COMMUNITY MATCH',
+            color: '#10b981',
+            bg: 'rgba(16, 185, 129, 0.12)',
+            border: 'rgba(16, 185, 129, 0.35)',
+            dot: '#10b981'
+        };
+    };
 
     // Relation badge color & indicator helper
     const getRelationBadgeInfo = (relation) => {
@@ -521,6 +568,173 @@ function AnimeItem() {
                 <div className="relations-empty">
                     <span className="empty-dot" />
                     <p>{"// STANDALONE TRANSMISSION — NO RECORDED PREQUELS, SEQUELS, OR SATELLITE CHRONOLOGY ARCHIVED"}</p>
+                </div>
+            )}
+
+            {/* From The Studio & Author Lineage Recommendations Section */}
+            <div className="section-header-row">
+                <div className="header-title-group">
+                    <h3 className='title'>From The Studio & Author // Lineage Recommendations</h3>
+                    {filteredLineageRecs && filteredLineageRecs.length > 0 && (
+                        <span className="specimen-count">
+                            {"// "}{filteredLineageRecs.length}{" PRODUCTION DISCOVERIES"}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* Filter Segmented Controls */}
+            {((studioLineage?.works?.length > 0) || (creatorLineage?.works?.length > 0) || (communityRecs?.length > 0)) && (
+                <div className="lineage-filter-bar">
+                    <button
+                        type="button"
+                        className={`filter-pill ${activeRecFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setActiveRecFilter('all')}
+                    >
+                        <span className="dot" />
+                        <span>ALL LINEAGE ({lineageRecommendations?.length || 0})</span>
+                    </button>
+
+                    {studioLineage?.name && studioLineage?.works?.length > 0 && (
+                        <button
+                            type="button"
+                            className={`filter-pill ${activeRecFilter === 'studio' ? 'active' : ''}`}
+                            onClick={() => setActiveRecFilter('studio')}
+                        >
+                            <span className="dot amber" />
+                            <span>STUDIO: {studioLineage.name.toUpperCase()} ({studioLineage.works.length})</span>
+                        </button>
+                    )}
+
+                    {creatorLineage?.name && creatorLineage?.works?.length > 0 && (
+                        <button
+                            type="button"
+                            className={`filter-pill ${activeRecFilter === 'creator' ? 'active' : ''}`}
+                            onClick={() => setActiveRecFilter('creator')}
+                        >
+                            <span className="dot orange" />
+                            <span>{creatorLineage.role.toUpperCase()}: {creatorLineage.name.toUpperCase()} ({creatorLineage.works.length})</span>
+                        </button>
+                    )}
+
+                    {communityRecs?.length > 0 && (
+                        <button
+                            type="button"
+                            className={`filter-pill ${activeRecFilter === 'community' ? 'active' : ''}`}
+                            onClick={() => setActiveRecFilter('community')}
+                        >
+                            <span className="dot green" />
+                            <span>COMMUNITY MATCHES ({communityRecs.length})</span>
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {loadingAnime && (!filteredLineageRecs || filteredLineageRecs.length === 0) ? (
+                <div className="relations-loading">
+                    <div className="loading-radar">
+                        <span className="pulse-blip" />
+                        <span className="radar-label">{"// SCANNING STUDIO ARCHIVE & CREATOR TRANSMISSIONS..."}</span>
+                    </div>
+                </div>
+            ) : filteredLineageRecs && filteredLineageRecs.length > 0 ? (
+                <div className="relations-grid">
+                    {filteredLineageRecs.map((recItem, idx) => {
+                        const badgeStyle = getLineageBadgeStyle(recItem.lineageType);
+                        return (
+                            <Link
+                                to={`/anime/${recItem.id}`}
+                                key={`lineage-${recItem.id}-${idx}`}
+                                className="relation-card"
+                                onClick={() => {
+                                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                                    document.documentElement.scrollTop = 0;
+                                    document.body.scrollTop = 0;
+                                }}
+                            >
+                                <div className="card-chassis">
+                                    <div className="media-viewport">
+                                        {recItem.image ? (
+                                            <img
+                                                src={recItem.image}
+                                                alt={recItem.name}
+                                                loading="lazy"
+                                                className="relation-poster"
+                                            />
+                                        ) : (
+                                            <div className="visual-scanner-placeholder">
+                                                <div className="scanner-radar">
+                                                    <span className="pulse-blip" />
+                                                </div>
+                                                <span className="scanner-label">{"// SCANNING VISUAL..."}</span>
+                                                <span className="scanner-id">ID #{recItem.id}</span>
+                                            </div>
+                                        )}
+
+                                        <div className="top-hud">
+                                            <div
+                                                className="relation-badge"
+                                                style={{
+                                                    color: badgeStyle.color,
+                                                    backgroundColor: badgeStyle.bg,
+                                                    borderColor: badgeStyle.border
+                                                }}
+                                            >
+                                                <span
+                                                    className="badge-dot"
+                                                    style={{ backgroundColor: badgeStyle.dot }}
+                                                />
+                                                <span>{recItem.lineageLabel || badgeStyle.label}</span>
+                                            </div>
+
+                                            {recItem.score ? (
+                                                <div className="score-badge">
+                                                    <span className="star">★</span>
+                                                    <span className="score-val">{recItem.score.toFixed(1)}</span>
+                                                </div>
+                                            ) : recItem.format ? (
+                                                <div className="type-badge">
+                                                    <span>{recItem.format.toUpperCase()}</span>
+                                                </div>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="viewport-overlay-spec">
+                                            <span className="id-tag">#{recItem.id}</span>
+                                            {recItem.episodes ? (
+                                                <span className="ep-tag">{recItem.episodes}E</span>
+                                            ) : null}
+                                        </div>
+                                    </div>
+
+                                    <div className="meta-console">
+                                        <h4 className="anime-title" title={recItem.name}>
+                                            {recItem.name}
+                                        </h4>
+
+                                        <div className="spec-row">
+                                            <span className="genre-pill">
+                                                {recItem.lineageType === 'STUDIO' ? 'STUDIO WORK' : (recItem.lineageType === 'CREATOR' ? 'CREATOR WORK' : 'AFFINITY')}
+                                            </span>
+                                            {recItem.year && <span className="year-label">{recItem.year}</span>}
+                                        </div>
+
+                                        <div className="relation-footer">
+                                            <span className="nav-trigger">
+                                                <span>LOAD SPEC SHEET</span>
+                                                <span className="arrow">→</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="relations-empty">
+                    <span className="empty-dot" />
+                    <p>{"// NO EXTERNAL STUDIO OR CREATOR LINEAGE RECORDS ARCHIVED FOR THIS SPECIMEN"}</p>
                 </div>
             )}
 
@@ -1125,6 +1339,13 @@ const AnimeItemStyled = styled.div`
         flex-wrap: wrap;
         gap: 0.75rem;
 
+        .header-title-group {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
         h3.title {
             margin: 0;
         }
@@ -1139,6 +1360,85 @@ const AnimeItemStyled = styled.div`
             padding: 3px 10px;
             border-radius: ${tokens.radii.xs};
             box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1), inset -1px -1px 2px rgba(255, 247, 240, 0.7);
+        }
+    }
+
+    .lineage-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+
+        .filter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: ${tokens.colors.chassis};
+            border: 1px solid rgba(255, 247, 240, 0.85);
+            padding: 7px 16px;
+            border-radius: ${tokens.radii.full};
+            font-family: ${tokens.fonts.technical};
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: ${tokens.colors.textSecondary};
+            cursor: pointer;
+            transition: ${tokens.transitions.normal};
+            box-shadow: ${tokens.shadows.card};
+
+            .dot {
+                width: 6px;
+                height: 6px;
+                border-radius: ${tokens.radii.full};
+                background-color: ${tokens.colors.textMuted};
+                transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+                &.amber {
+                    background-color: #f59e0b;
+                    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+                }
+                &.orange {
+                    background-color: ${tokens.colors.accent};
+                    box-shadow: 0 0 6px rgba(255, 94, 40, 0.4);
+                }
+                &.green {
+                    background-color: #10b981;
+                    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+                }
+            }
+
+            &:hover {
+                border-color: ${tokens.colors.accent};
+                color: ${tokens.colors.textPrimary};
+                transform: translateY(-2px);
+                box-shadow: ${tokens.shadows.floating};
+            }
+
+            &.active {
+                background: ${tokens.colors.recessed};
+                border-color: ${tokens.colors.accent};
+                color: ${tokens.colors.accent};
+                box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+
+                .dot {
+                    background-color: ${tokens.colors.accent};
+                    box-shadow: 0 0 8px ${tokens.colors.accent};
+
+                    &.amber {
+                        background-color: #f59e0b;
+                        box-shadow: 0 0 8px #f59e0b;
+                    }
+                    &.orange {
+                        background-color: ${tokens.colors.accent};
+                        box-shadow: 0 0 8px ${tokens.colors.accent};
+                    }
+                    &.green {
+                        background-color: #10b981;
+                        box-shadow: 0 0 8px #10b981;
+                    }
+                }
+            }
         }
     }
 

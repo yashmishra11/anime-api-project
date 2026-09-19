@@ -18,7 +18,7 @@ function Upcoming({ selectedGenre = 'Overall', onResetGenre }) {
 
     const displayList = (!isSearch && selectedGenre && selectedGenre !== 'Overall')
         ? baseList.filter((anime) =>
-            anime.genres?.some((g) => g.name.toLowerCase() === selectedGenre.toLowerCase())
+            anime.genres?.some((g) => (typeof g === 'string' ? g : g?.name || '').toLowerCase() === selectedGenre.toLowerCase())
           )
         : baseList;
 

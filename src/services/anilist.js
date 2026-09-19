@@ -170,6 +170,97 @@ export function normalizeAniListMedia(media) {
     const studioList = media.studios?.nodes || [];
     const mainStudio = studioList[0]?.name || null;
 
+    // Lineage Recommendations (From Studio, Author/Director, and Community)
+    const mainStudioEdge = (media.studios?.edges || []).find(e => e.isMain || e.node?.isAnimationStudio) || media.studios?.edges?.[0];
+    const studioName = mainStudioEdge?.node?.name || mainStudio || null;
+    const studioWorksRaw = mainStudioEdge?.node?.media?.nodes || [];
+    const studioWorks = studioWorksRaw
+        .filter(m => m && m.id !== media.id)
+        .map(m => ({
+            id: m.id,
+            mal_id: m.id,
+            name: m.title?.english || m.title?.romaji || m.title?.native || 'Unknown Title',
+            image: m.coverImage?.extraLarge || m.coverImage?.large || m.coverImage?.medium,
+            format: m.format,
+            year: m.seasonYear,
+            score: m.averageScore ? Number((m.averageScore / 10).toFixed(1)) : null,
+            episodes: m.episodes,
+            genres: m.genres || [],
+            lineageType: 'STUDIO',
+            lineageLabel: `STUDIO // ${studioName ? studioName.toUpperCase() : 'PRODUCTION'}`,
+            creatorName: studioName
+        }));
+
+    // Author / Director / Creator Lineage
+    const staffEdges = media.staff?.edges || [];
+    const keyRoles = ['Original Creator', 'Original Story', 'Author', 'Director', 'Series Director'];
+    let primaryStaff = null;
+    for (const roleName of keyRoles) {
+        const found = staffEdges.find(e => e.role && e.role.toLowerCase().includes(roleName.toLowerCase()) && e.node?.staffMedia?.nodes?.length > 0);
+        if (found) {
+            primaryStaff = found;
+            break;
+        }
+    }
+    if (!primaryStaff && staffEdges.length > 0) {
+        primaryStaff = staffEdges.find(e => e.node?.staffMedia?.nodes?.length > 0);
+    }
+
+    const creatorName = primaryStaff?.node?.name?.full || null;
+    const creatorRole = primaryStaff?.role || 'Creator';
+    const creatorWorksRaw = primaryStaff?.node?.staffMedia?.nodes || [];
+    const creatorWorks = creatorWorksRaw
+        .filter(m => m && m.id !== media.id)
+        .map(m => ({
+            id: m.id,
+            mal_id: m.id,
+            name: m.title?.english || m.title?.romaji || m.title?.native || 'Unknown Title',
+            image: m.coverImage?.extraLarge || m.coverImage?.large || m.coverImage?.medium,
+            format: m.format,
+            year: m.seasonYear,
+            score: m.averageScore ? Number((m.averageScore / 10).toFixed(1)) : null,
+            episodes: m.episodes,
+            genres: m.genres || [],
+            lineageType: 'CREATOR',
+            lineageLabel: `${creatorRole.toUpperCase()} // ${creatorName ? creatorName.toUpperCase() : 'AUTHOR'}`,
+            creatorName: creatorName
+        }));
+
+    // Community Affinity Recommendations
+    const recNodes = media.recommendations?.nodes || [];
+    const communityRecs = recNodes
+        .map(r => r.mediaRecommendation)
+        .filter(m => m && m.id !== media.id)
+        .map(m => ({
+            id: m.id,
+            mal_id: m.id,
+            name: m.title?.english || m.title?.romaji || m.title?.native || 'Unknown Title',
+            image: m.coverImage?.extraLarge || m.coverImage?.large || m.coverImage?.medium,
+            format: m.format,
+            year: m.seasonYear,
+            score: m.averageScore ? Number((m.averageScore / 10).toFixed(1)) : null,
+            episodes: m.episodes,
+            genres: m.genres || [],
+            lineageType: 'COMMUNITY',
+            lineageLabel: 'COMMUNITY AFFINITY',
+            creatorName: 'Fan Recommended'
+        }));
+
+    // Deduplicated combined lineage recommendations
+    const seenIds = new Set();
+    const lineageRecommendations = [];
+    const addDeduplicated = (items) => {
+        items.forEach(it => {
+            if (!seenIds.has(it.id)) {
+                seenIds.add(it.id);
+                lineageRecommendations.push(it);
+            }
+        });
+    };
+    addDeduplicated(creatorWorks);
+    addDeduplicated(studioWorks);
+    addDeduplicated(communityRecs);
+
     // Season string with year if available
     let seasonStr = media.season || null;
     if (seasonStr && yearVal) {
@@ -214,6 +305,10 @@ export function normalizeAniListMedia(media) {
         source: media.source || null,
         studio: mainStudio,
         studios: studioList,
+        studioLineage: { name: studioName, works: studioWorks },
+        creatorLineage: { name: creatorName, role: creatorRole, works: creatorWorks },
+        communityRecs,
+        lineageRecommendations,
         aired: { string: airedString },
         airedString,
         rating: ratingStr,
@@ -481,6 +576,35 @@ query ($id: Int) {
         name
         isAnimationStudio
       }
+      edges {
+        isMain
+        node {
+          id
+          name
+          isAnimationStudio
+          media(sort: [POPULARITY_DESC, SCORE_DESC], perPage: 12) {
+            nodes {
+              id
+              idMal
+              title {
+                english
+                romaji
+                native
+              }
+              coverImage {
+                extraLarge
+                large
+                medium
+              }
+              format
+              episodes
+              seasonYear
+              averageScore
+              genres
+            }
+          }
+        }
+      }
     }
     genres
     description(asHtml: false)
@@ -524,6 +648,68 @@ query ($id: Int) {
             large
             medium
           }
+        }
+      }
+    }
+    staff(sort: [RELEVANCE], perPage: 15) {
+      edges {
+        role
+        node {
+          id
+          name {
+            full
+            native
+          }
+          image {
+            large
+            medium
+          }
+          primaryOccupations
+          staffMedia(sort: [POPULARITY_DESC, SCORE_DESC], perPage: 12) {
+            nodes {
+              id
+              idMal
+              title {
+                english
+                romaji
+                native
+              }
+              coverImage {
+                extraLarge
+                large
+                medium
+              }
+              format
+              episodes
+              seasonYear
+              averageScore
+              genres
+            }
+          }
+        }
+      }
+    }
+    recommendations(sort: [RATING_DESC], perPage: 15) {
+      nodes {
+        rating
+        mediaRecommendation {
+          id
+          idMal
+          title {
+            english
+            romaji
+            native
+          }
+          coverImage {
+            extraLarge
+            large
+            medium
+          }
+          format
+          episodes
+          seasonYear
+          averageScore
+          genres
         }
       }
     }

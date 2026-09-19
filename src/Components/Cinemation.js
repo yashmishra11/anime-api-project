@@ -46,7 +46,7 @@ const CURATED_LANDSCAPES = [
         id: 154587,
         title: "Frieren: Beyond Journey's End",
         titleNative: "葬送のフリーレン",
-        scene: "The Hilltop Meadow of Blue Sem Flowers",
+        scene: "The Sanctuary of Blue-Moon Weed",
         resolution: "1920 × 1080",
         qualityBadge: "FHD 1080P",
         studio: "Madhouse",
@@ -54,9 +54,9 @@ const CURATED_LANDSCAPES = [
         year: "2023",
         format: "TV",
         score: 9.3,
-        lore: "A tranquil cliffside overlooking northern mountain valleys, carpeted in ethereal blue blossoms that sway softly in the cool alpine breeze.",
+        lore: "Frieren standing atop the ancient watchtower sanctuary where Himmel's beloved blue-moon weed flowers bloom amidst golden autumn foliage.",
         image: "/landscapes/frieren.jpg",
-        fallbackImage: "https://wallpapers.com/images/hd/flower-field-serenity-1818bc1e726dda9a.jpg",
+        fallbackImage: "https://static.wikia.nocookie.net/frieren/images/c/c2/Frieren_discovers_the_blue-moon_weed_field_EP2.png/revision/latest",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg"
     },
     {
