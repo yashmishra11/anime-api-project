@@ -48,26 +48,30 @@ const SidebarStyled = styled.aside`
     margin-top: 1.5rem;
     background: ${tokens.colors.chassis};
     border-radius: ${tokens.radii.xl} 0 0 0;
-    padding: 2rem 2.25rem 2rem 2rem;
-    min-width: 300px;
-    max-width: 340px;
+    padding: 1.25rem 1rem;
+    min-width: 195px;
+    max-width: 220px;
+    width: 210px;
+    flex-shrink: 0;
     box-shadow: ${tokens.shadows.card};
     border: 1px solid rgba(255, 247, 240, 0.85);
     border-right: none;
     transition: ${tokens.transitions.normal};
     
     @media screen and (max-width: 1440px) {
-        min-width: 260px;
-        max-width: 300px;
-        padding: 1.75rem 1.75rem 1.75rem 1.5rem;
+        min-width: 180px;
+        max-width: 205px;
+        width: 195px;
+        padding: 1rem 0.85rem;
     }
     
     @media screen and (max-width: 1024px) {
         max-width: 100%;
         min-width: 100%;
+        width: 100%;
         border-radius: ${tokens.radii.lg};
         border-right: 1px solid rgba(255, 247, 240, 0.85);
-        padding: 2rem;
+        padding: 1.5rem;
         
         .anime {
             flex-direction: row !important;
@@ -126,31 +130,31 @@ const SidebarStyled = styled.aside`
     h3 {
         color: ${tokens.colors.textPrimary};
         font-family: ${tokens.fonts.technical};
-        font-size: 1.15rem;
+        font-size: 0.92rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         text-shadow: ${tokens.shadows.textEmbossed};
         border-bottom: 1px solid ${tokens.colors.borderShadow};
-        padding-bottom: 0.5rem;
+        padding-bottom: 0.4rem;
         box-shadow: 0 1px 0 ${tokens.colors.borderLight};
     }
     
     .anime {
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 0.9rem;
         width: 100%;
         
         a {
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.5rem;
             color: ${tokens.colors.textPrimary};
             text-decoration: none;
-            padding: 0.75rem;
+            padding: 0.5rem;
             border-radius: ${tokens.radii.md};
             background: ${tokens.colors.chassis};
             box-shadow: ${tokens.shadows.card};
@@ -183,9 +187,9 @@ const SidebarStyled = styled.aside`
                     background: ${tokens.colors.accent};
                     color: ${tokens.colors.accentForeground};
                     font-family: ${tokens.fonts.technical};
-                    font-size: 0.7rem;
+                    font-size: 0.65rem;
                     font-weight: 700;
-                    padding: 2px 6px;
+                    padding: 2px 5px;
                     border-radius: ${tokens.radii.xs};
                     box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
                     letter-spacing: 0.05em;
@@ -195,13 +199,13 @@ const SidebarStyled = styled.aside`
             .anime-meta {
                 display: flex;
                 flex-direction: column;
-                gap: 0.25rem;
+                gap: 0.2rem;
 
                 h5 {
                     font-family: ${tokens.fonts.primary};
-                    font-size: 0.875rem;
+                    font-size: 0.8rem;
                     font-weight: 700;
-                    line-height: 1.35;
+                    line-height: 1.3;
                     color: ${tokens.colors.textPrimary};
                     display: -webkit-box;
                     -webkit-line-clamp: 2;
@@ -214,7 +218,7 @@ const SidebarStyled = styled.aside`
 
                 .score-label {
                     font-family: ${tokens.fonts.technical};
-                    font-size: 0.75rem;
+                    font-size: 0.68rem;
                     font-weight: 600;
                     color: ${tokens.colors.textMuted};
                     letter-spacing: 0.04em;

@@ -1445,19 +1445,37 @@ const AnimeItemStyled = styled.div`
     /* Connected Universe Relations Deck */
     .relations-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1.15rem;
         background: ${tokens.colors.chassis};
-        padding: 2rem 2.25rem;
+        padding: 1.75rem 1.75rem;
         border-radius: ${tokens.radii.xl};
         box-shadow: ${tokens.shadows.recessed};
         border: 1px solid rgba(255, 247, 240, 0.8);
         margin-bottom: 2rem;
 
-        @media screen and (max-width: 768px) {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            padding: 1.25rem 1rem;
+        @media screen and (max-width: 1480px) {
+            padding: 1.5rem 1.25rem;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 1rem;
+        }
+
+        @media screen and (max-width: 1150px) {
+            padding: 1.25rem 1rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        @media screen and (max-width: 820px) {
+            padding: 1.25rem 0.85rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        @media screen and (max-width: 460px) {
+            padding: 1rem 0.5rem;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 0.85rem;
         }
 
         .relation-card {
