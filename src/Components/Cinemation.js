@@ -6,20 +6,23 @@ import WatchlistButton from './WatchlistButton';
 import { useGlobalContext } from '../context/global';
 import { fetchAniList } from '../services/anilist';
 
-// Curated collection of world-renowned anime landscapes & scenery (100% verified active AniList assets)
+// Curated collection of world-renowned anime landscapes & scenery in true 4K UHD & High Resolution
 const CURATED_LANDSCAPES = [
     {
         id: 21519,
         title: "Your Name.",
         titleNative: "君の名は。",
         scene: "Lake Itomori at Twilight — Comet Tiamat",
+        resolution: "3840 × 2160",
+        qualityBadge: "4K UHD",
         studio: "CoMix Wave Films",
         director: "Makoto Shinkai",
         year: "2016",
         format: "MOVIE",
         score: 8.8,
         lore: "A cosmic fracture of stardust reflected over the quiet volcanic caldera of Itomori, where twilight blurs the boundary between memory and dreams.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21519-1ayMXgNlmByb.jpg",
+        image: "/landscapes/your-name.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/itomori-lake-your-name-4k-mxm3d7g0576dfm11.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21519-SUo3ZQuCbYhJ.png"
     },
     {
@@ -27,13 +30,16 @@ const CURATED_LANDSCAPES = [
         title: "Spirited Away",
         titleNative: "千と千尋の神隠し",
         scene: "The Ocean Railway — Swamp Bottom Line",
+        resolution: "1920 × 1040 (FHD Widescreen)",
+        qualityBadge: "FHD 1080P",
         studio: "Studio Ghibli",
         director: "Hayao Miyazaki",
         year: "2001",
         format: "MOVIE",
         score: 8.9,
         lore: "Submerged iron tracks gliding through mirror-smooth ocean waters under pastel clouds, where the lone spirit train journeys into the sunset.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/199-Sm2RU5PSqw7T.jpg",
+        image: "/landscapes/spirited-away.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/spirited-away-train-in-water-v3dsw820z6y890o9.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199-sWefXJvXkDOb.jpg"
     },
     {
@@ -41,41 +47,50 @@ const CURATED_LANDSCAPES = [
         title: "Frieren: Beyond Journey's End",
         titleNative: "葬送のフリーレン",
         scene: "The Hilltop Meadow of Blue Sem Flowers",
+        resolution: "1920 × 1080",
+        qualityBadge: "FHD 1080P",
         studio: "Madhouse",
         director: "Keiichirou Saitou",
         year: "2023",
         format: "TV",
         score: 9.3,
         lore: "A tranquil cliffside overlooking northern mountain valleys, carpeted in ethereal blue blossoms that sway softly in the cool alpine breeze.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/154587-ivXNJ23SM1xB.jpg",
+        image: "/landscapes/frieren.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/flower-field-serenity-1818bc1e726dda9a.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg"
     },
     {
         id: 106286,
         title: "Weathering With You",
         titleNative: "天気の子",
-        scene: "Rooftop Shinto Torii over Tokyo",
+        scene: "Floating High Above Tokyo — Boundless Sky",
+        resolution: "3508 × 2173 (3.5K UHD)",
+        qualityBadge: "3.5K UHD",
         studio: "CoMix Wave Films",
         director: "Makoto Shinkai",
         year: "2019",
         format: "MOVIE",
         score: 8.3,
         lore: "Radiant golden shafts of sunlight piercing torrential rainclouds, illuminating glistening rain puddles and Tokyo's boundless skyline.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/106286-3oKwiwjd7Wkm.jpg",
+        image: "/landscapes/weathering-with-you.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/weathering-with-you-japanese-anime-8zksk5gi52zhmhig.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx106286-5COcpd0J9VbL.png"
     },
     {
         id: 21827,
         title: "Violet Evergarden",
         titleNative: "ヴァイオレット・エヴァーガーデン",
-        scene: "The Port City of Leiden at Dusk",
+        scene: "The Postal Library of Memories — Leiden",
+        resolution: "1920 × 1080",
+        qualityBadge: "FHD 1080P",
         studio: "Kyoto Animation",
         director: "Taichi Ishidate",
         year: "2018",
         format: "TV",
         score: 8.6,
-        lore: "Cobblestone boulevards and iridescent canal reflections kissed by the evening glow, where handwritten letters carry unsaid emotions across the sea.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21827-ROucgYiiiSpR.jpg",
+        lore: "Sunlight pouring across wooden book corridors and airborne manuscripts, where handwritten letters carry unsaid emotions across the sea.",
+        image: "/landscapes/violet-evergarden.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/violet-evergarden-in-library-with-flying-letters-8brrjypfv4a06tnk.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21827-ubzq619ZA2E9.png"
     },
     {
@@ -83,13 +98,16 @@ const CURATED_LANDSCAPES = [
         title: "Howl's Moving Castle",
         titleNative: "ハウルの動く城",
         scene: "The Secret Alpine Lake & Flower Haven",
+        resolution: "1920 × 1080",
+        qualityBadge: "FHD 1080P",
         studio: "Studio Ghibli",
         director: "Hayao Miyazaki",
         year: "2004",
         format: "MOVIE",
         score: 8.8,
         lore: "A pristine high-altitude meadow of wild star blossoms framed by jagged snow-capped summits, untouched by the noise of the outside world.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/431-fLBlvTgdqLCz.jpg",
+        image: "/landscapes/howls-moving-castle.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/exquisite-howl-s-moving-castle-scene-1fenuve9evr0fkp4.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx431-o8Lj3XkjHm2k.jpg"
     },
     {
@@ -97,55 +115,67 @@ const CURATED_LANDSCAPES = [
         title: "Suzume",
         titleNative: "すずめの戸締まり",
         scene: "The Abandoned Onsen Gateway to the Ever-After",
+        resolution: "6000 × 4500",
+        qualityBadge: "6K UHD",
         studio: "CoMix Wave Films",
         director: "Makoto Shinkai",
         year: "2022",
         format: "MOVIE",
         score: 8.4,
         lore: "A silent moss-covered rotunda standing in shallow springwater, framing a door that opens into a cosmic twilight where all times converge.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/142770-YgESt2HJXlNg.jpg",
+        image: "/landscapes/suzume.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/suzume-no-tojimari-character-by-door-hzxonr3bn7srpfek.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx142770-dDaDIRnsv5jN.jpg"
     },
     {
         id: 16498,
         title: "Attack on Titan",
         titleNative: "進撃の巨人",
-        scene: "The Outer Plains Beyond Wall Maria at Sunrise",
+        scene: "Dawn Over Wall Maria & Shiganshina",
+        resolution: "3840 × 2160",
+        qualityBadge: "4K UHD",
         studio: "WIT Studio",
         director: "Tetsuro Araki",
         year: "2013",
         format: "TV",
         score: 8.5,
         lore: "Vast rolling emerald plains stretching toward the distant horizon under the first golden rays of dawn, whispering the promise of freedom.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-8jpFCOcDmneX.jpg",
+        image: "/landscapes/attack-on-titan.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/attack-on-titan-4k-fiery-eren-538agyczt24avmdt.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-buvcRTBx4NSm.jpg"
     },
     {
         id: 101922,
         title: "Demon Slayer: Kimetsu no Yaiba",
         titleNative: "鬼滅の刃",
-        scene: "Mount Sagiri — The Wisteria Grove Sanctuary",
+        scene: "Mount Sagiri — The Ancient Scenery Sanctuary",
+        resolution: "2400 × 1283",
+        qualityBadge: "2.4K QHD",
         studio: "ufotable",
         director: "Haruo Sotozaki",
         year: "2019",
         format: "TV",
         score: 8.5,
-        lore: "Cascades of luminous violet wisteria blossoms glowing gently under moonlight, forming an ancient protective perimeter against the night.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/101922-33MtJGsUSxga.jpg",
+        lore: "Cascades of luminous mountain flora glowing gently under moonlight, forming an ancient protective perimeter against the night.",
+        image: "/landscapes/demon-slayer.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/demon-slayer-scenery-7apbizlnvtyyez0c.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg"
     },
     {
         id: 9253,
         title: "Steins;Gate",
         titleNative: "シュタインズ・ゲート",
-        scene: "Akihabara Station Overpass at Golden Hour",
+        scene: "Akihabara Radio Kaikan at Golden Hour",
+        resolution: "4800 × 2700",
+        qualityBadge: "4.8K UHD",
         studio: "White Fox",
         director: "Hiroshi Hamasaki",
         year: "2011",
         format: "TV",
         score: 9.0,
-        lore: "Long shadows stretching across the Tokyo pedestrian overpasses as cicadas buzz softly in the sweltering summer air of World Line α.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/n9253-JIhmKgBKsWUN.jpg",
+        lore: "Long shadows stretching across Tokyo as cicadas buzz softly in the sweltering summer air of World Line α.",
+        image: "/landscapes/steins-gate.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/fan-art-steins-gate-characters-5bfff84vs4f4bxlb.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-tIUXF2gfU8Sg.jpg"
     },
     {
@@ -153,13 +183,16 @@ const CURATED_LANDSCAPES = [
         title: "A Silent Voice",
         titleNative: "聲の形",
         scene: "The Ogaki Water Promenade at Twilight",
+        resolution: "3229 × 2018",
+        qualityBadge: "3.2K UHD",
         studio: "Kyoto Animation",
         director: "Naoko Yamada",
         year: "2016",
         format: "MOVIE",
         score: 8.8,
         lore: "Cherry blossoms drifting quietly across the canal ripples under streetlamps, carrying the silent harmony of reconciliation and renewal.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/20954-f30bHMXa5Qoe.jpg",
+        image: "/landscapes/a-silent-voice.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/a-silent-voice-cherry-blossoms-couple-la8mtaelurut4og2.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20954-sYRfE5jQRtSB.jpg"
     },
     {
@@ -167,13 +200,16 @@ const CURATED_LANDSCAPES = [
         title: "Princess Mononoke",
         titleNative: "もののけ姫",
         scene: "The Ancient Forest of the Great Forest Spirit",
+        resolution: "1920 × 1080",
+        qualityBadge: "FHD 1080P",
         studio: "Studio Ghibli",
         director: "Hayao Miyazaki",
         year: "1997",
         format: "MOVIE",
         score: 8.7,
         lore: "Ancient emerald moss-draped cedar glades where Kodama click gently in the shadows, guardians of a sacred primordial sanctuary.",
-        image: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/164-Aj6MINy7VTfs.jpg",
+        image: "/landscapes/princess-mononoke.jpg",
+        fallbackImage: "https://wallpapers.com/images/hd/princess-mononoke-kodama-tree-spirits-eua4v7sybgce80lq.jpg",
         poster: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx164-ySuGzCWVw2cL.jpg"
     }
 ];
@@ -203,7 +239,7 @@ export default function Cinemation() {
     const lastTickTimeRef = useRef(Date.now());
     const controlsTimeoutRef = useRef(null);
 
-    // Fetch live banner URLs directly from AniList for curated landscapes
+    // Fetch live poster URLs from AniList for curated landscapes without overwriting 4K backgrounds
     useEffect(() => {
         let isMounted = true;
         const fetchCuratedBanners = async () => {
@@ -214,7 +250,6 @@ export default function Cinemation() {
                         Page(page: 1, perPage: 25) {
                             media(id_in: $ids, type: ANIME) {
                                 id
-                                bannerImage
                                 coverImage { extraLarge large }
                             }
                         }
@@ -223,23 +258,20 @@ export default function Cinemation() {
                 const res = await fetchAniList(query, { ids });
                 const mediaList = res?.Page?.media || [];
                 if (mediaList.length > 0 && isMounted) {
-                    const bannerMap = new Map();
+                    const posterMap = new Map();
                     mediaList.forEach(m => {
-                        if (m.bannerImage) {
-                            bannerMap.set(m.id, {
-                                bannerImage: m.bannerImage,
-                                poster: m.coverImage?.extraLarge || m.coverImage?.large
-                            });
+                        const poster = m.coverImage?.extraLarge || m.coverImage?.large;
+                        if (poster) {
+                            posterMap.set(m.id, poster);
                         }
                     });
 
                     setCuratedList(prev => prev.map(item => {
-                        const live = bannerMap.get(item.id);
-                        if (!live) return item;
+                        const livePoster = posterMap.get(item.id);
+                        if (!livePoster) return item;
                         return {
                             ...item,
-                            image: live.bannerImage || item.image,
-                            poster: live.poster || item.poster
+                            poster: livePoster || item.poster
                         };
                     }));
                 }
@@ -268,6 +300,8 @@ export default function Cinemation() {
                 score: a.score || 8.5,
                 image: a.bannerImage,
                 poster: a.coverImage?.large || a.images?.jpg?.large_image_url || '',
+                resolution: "1920 × 400 (AniList Banner)",
+                qualityBadge: "LIVE BANNER",
                 lore: a.synopsis ? a.synopsis.substring(0, 160) + '...' : 'A captivating moment frozen in high resolution from the official transmission archives.'
             }));
 
@@ -560,10 +594,10 @@ export default function Cinemation() {
                             setUseLiveBanners(!useLiveBanners);
                             setCurrentIndex(0);
                         }}
-                        title="Toggle between Curated Masterpieces and Live AniList Banners"
+                        title="Toggle between Curated 4K Masterpieces and Live AniList Banners"
                     >
                         <span className="pip" />
-                        <span>{useLiveBanners ? 'SOURCE: LIVE ANILIST' : 'SOURCE: CURATED 4K'}</span>
+                        <span>{useLiveBanners ? 'SOURCE: LIVE ANILIST' : 'SOURCE: CURATED 4K UHD'}</span>
                     </button>
 
                     {/* Ambient Lofi Sound Synthesizer */}
@@ -623,12 +657,18 @@ export default function Cinemation() {
                 <div className="viewport-screen">
                     {slideList.map((item, index) => {
                         const isActive = index === currentIndex;
+                        const bgUrls = [
+                            item.image ? `url(${item.image})` : null,
+                            item.fallbackImage ? `url(${item.fallbackImage})` : null,
+                            item.poster ? `url(${item.poster})` : null
+                        ].filter(Boolean).join(', ');
+
                         return (
                             <div
                                 key={`${item.id}-${index}`}
                                 className={`cinema-slide ${isActive ? 'active' : ''}`}
                                 style={{
-                                    backgroundImage: `url(${item.image}), url(${item.poster})`,
+                                    backgroundImage: bgUrls,
                                     zIndex: isActive ? 2 : 1
                                 }}
                             >
@@ -665,6 +705,9 @@ export default function Cinemation() {
                             <div className="scene-label">
                                 <span className="scene-dot" />
                                 <span>LOCATION ARCHIVE // SCENIC TRANSMISSION</span>
+                                {currentSlide.qualityBadge && (
+                                    <span className="res-pill">{currentSlide.qualityBadge}</span>
+                                )}
                             </div>
                             <h3 className="scene-name">{currentSlide.scene}</h3>
                         </div>
@@ -755,6 +798,12 @@ export default function Cinemation() {
                                                         <span className="spec-value">{currentSlide.director}</span>
                                                     </div>
                                                 )}
+                                                {currentSlide.resolution && (
+                                                    <div className="spec-item">
+                                                        <span className="spec-label">RESOLUTION:</span>
+                                                        <span className="spec-value" style={{ color: '#ff8a4c', fontWeight: 800 }}>{currentSlide.resolution}</span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <p className="scenery-lore">
@@ -826,7 +875,9 @@ export default function Cinemation() {
                                         alt={item.scene} 
                                         loading="lazy"
                                         onError={(e) => {
-                                            if (item.poster && e.target.src !== item.poster) {
+                                            if (item.fallbackImage && e.target.src !== item.fallbackImage) {
+                                                e.target.src = item.fallbackImage;
+                                            } else if (item.poster && e.target.src !== item.poster) {
                                                 e.target.src = item.poster;
                                             }
                                         }}
@@ -1150,6 +1201,8 @@ const CinemationStyled = styled.div`
             height: 100%;
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
+            image-rendering: -webkit-optimize-contrast;
             opacity: 0;
             transition: opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
@@ -1266,6 +1319,19 @@ const CinemationStyled = styled.div`
                     border-radius: 50%;
                     background: ${tokens.colors.accent};
                     box-shadow: 0 0 6px ${tokens.colors.accent};
+                }
+
+                .res-pill {
+                    margin-left: 0.5rem;
+                    padding: 0.12rem 0.5rem;
+                    border-radius: ${tokens.radii.xs};
+                    font-size: 0.65rem;
+                    font-weight: 800;
+                    letter-spacing: 0.08em;
+                    background: rgba(255, 94, 40, 0.2);
+                    border: 1px solid rgba(255, 94, 40, 0.6);
+                    color: #ffffff;
+                    text-shadow: 0 0 8px rgba(255, 94, 40, 0.8);
                 }
             }
 
